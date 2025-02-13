@@ -43,16 +43,8 @@ SESSION = 'SESSION_' + SESSION
 
 
 def GET_PROJECT_ROOT():
-    # goto the root folder of LogBar
-    current_abspath = os.path.abspath('__file__')
-    while True:
-        # change to logbar after testing
-        if os.path.split(current_abspath)[1] == 'logbar':
-            project_root = current_abspath
-            break
-        else:
-            current_abspath = os.path.dirname(current_abspath)
-    return project_root
+    # The constants file is located in the root of the project
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 def GET_LOGS_ROOT():
