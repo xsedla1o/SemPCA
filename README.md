@@ -81,6 +81,7 @@ Follow the steps below in order to reproduce our experiment results.
 
 - **Step 1:** Create a directory under the `datasets` folder **using a unique and memorable name **(e.g. HDFS or BGL).
 - **Step 2:** Move a target log file with the extension of .log (in plain text, with each row containing one log message) into the folder created in step 1.
+- **Step 2.1:** Copy the dataset to a file named `label.txt` in the same folder. For HDFS, use the loghub annotation. For BGL and Spirit, use the provided labels.
 - **Step 3:** Download the  `glove.6B.300d.txt` from [Stanford NLP word embeddings](https://nlp.stanford.edu/projects/glove/), and put it under the `datasets` folder.
 - **Step 4:** Enter the `scripts/HDFS` folder, and run  `PCA_PlusPlus.sh` to perform an anomaly detection on HDFS by PCA++. 
 Other techniques can be executed by the corresponding scripts in a similar way.
