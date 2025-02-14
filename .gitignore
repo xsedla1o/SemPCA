@@ -115,7 +115,6 @@ dmypy.json
 .pyre/
 
 .idea
-__init__.py
 persistences/
 datasets/HDFS/*.txt
 !datasets/HDFS/label.txt
