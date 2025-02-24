@@ -1,8 +1,13 @@
+import logging
+import os
 import sys
+from collections import OrderedDict
+from typing import Tuple, List, Dict
+
+import pandas as pd
 
 sys.path.extend([".", ".."])
 from CONSTANTS import *
-from collections import OrderedDict
 from preprocessing.BasicLoader import BasicDataLoader
 
 
@@ -30,22 +35,58 @@ class BGLLoader(BasicDataLoader):
     def logger(self):
         return BGLLoader._logger
 
-    def __init__(self, in_file=None,
-                 window_size=120,
-                 dataset_base=os.path.join(PROJECT_ROOT, 'datasets/BGL'),
-                 semantic_repr_func=None):
+    def __init__(
+            self,
+            in_file=None,
+            group_component: bool = False,
+            win_secs: int = None,
+            win_lines: int = 20,
+            win_kind: str = "tumbling",
+            win_step: int = 1,
+            dataset_base=os.path.join(PROJECT_ROOT, 'datasets/BGL'),
+            semantic_repr_func=None
+    ):
+        """
+        Initialize BGLLoader.
+
+        Parameters
+        ----------
+        in_file: input file path
+        group_component: whether to group logs by components
+        win_secs: max window size in seconds
+        win_lines: max window size in lines
+        dataset_base: dataset base path
+        semantic_repr_func: semantic representation function
+        """
         super(BGLLoader, self).__init__()
+
+        assert isinstance(win_secs, int) or isinstance(win_lines,
+                                                       int), "At least one of win_secs and win_lines should be an integer."
+        assert win_secs is None or (
+                win_secs > 0), "Window size must be a positive integer."
+        assert win_lines is None or (
+                win_lines > 0), "Window size must be a positive integer."
+
+        win_kinds = ["tumbling", "sliding"]
+        assert win_kind in win_kinds, f"win_kind, must be one of {win_kinds}"
 
         if not os.path.exists(in_file):
             self.logger.error('Input file not found, please check.')
             exit(1)
         self.in_file = in_file
         self.remove_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        self.window_size = window_size
+        self.group_component = group_component
+        self.win_secs = win_secs
+        self.win_lines = win_lines
+
+        self.win_kind = win_kind
+        self.win_step = win_step
+
         self.dataset_base = dataset_base
         self._load_raw_log_seqs()
         self.semantic_repr_func = semantic_repr_func
-        pass
+
+        self._dataset_lines = None
 
     def _pre_process(self, line):
         tokens = line.strip().split()
@@ -515,7 +556,7 @@ class BGLLoader(BasicDataLoader):
             self.logger.info('Start load from previous extraction. File path %s' % sequence_file)
             with open(sequence_file, 'r', encoding='utf-8') as reader:
                 for line in tqdm(reader.readlines()):
-                    tokens = line.strip().split(':')
+                    tokens = line.strip().rsplit(':', maxsplit=1)
                     block = tokens[0]
                     seq = tokens[1].split()
                     if block not in self.block2seqs.keys():
@@ -524,59 +565,360 @@ class BGLLoader(BasicDataLoader):
                     self.block2seqs[block] = [int(x) for x in seq]
             with open(label_file, 'r', encoding='utf-8') as reader:
                 for line in reader.readlines():
-                    block_id, label = line.strip().split(':')
+                    block_id, label = line.strip().rsplit(':', maxsplit=1)
                     self.block2label[block_id] = label
 
         else:
             self.logger.info('Start loading BGL log sequences.')
             with open(self.in_file, 'r', encoding='utf-8') as reader:
-                lines = reader.readlines()
-                nodes = OrderedDict()
-                for idx, line in enumerate(lines):
-                    tokens = line.strip().split()
-                    node = str(tokens[3])
-                    if node not in nodes.keys():
-                        nodes[node] = []
-                    nodes[node].append((idx, line.strip()))
+                nodes = self._component_grouping(reader)
 
-                pbar = tqdm(total=len(nodes))
-                # self.logger.info('Found %d nodes in raw log file, start generating log sequences.' % len(nodes))
-                block_idx = 0
-                for node, seq in nodes.items():
-                    if len(seq) < self.window_size:
-                        self.blocks.append(str(block_idx))
-                        self.block2seqs[str(block_idx)] = []
-                        label = 'Normal'
-                        for (idx, line) in seq:
-                            self.block2seqs[str(block_idx)].append(int(idx))
-                            if not line.startswith('-'):
-                                label = 'Anomalous'
-                        self.block2label[str(block_idx)] = label
-                        block_idx += 1
-                    else:
-                        i = 0
-                        while i < len(seq):
-                            self.blocks.append(str(block_idx))
-                            self.block2seqs[str(block_idx)] = []
-                            label = 'Normal'
-                            for (idx, line) in seq[i:i + self.window_size]:
-                                self.block2seqs[str(block_idx)].append(int(idx))
-                                if not line.startswith('-'):
-                                    label = 'Anomalous'
-                            self.block2label[str(block_idx)] = label
-                            block_idx += 1
-                            i += self.window_size
+                if self.win_kind == "tumbling":
+                    self._group_by_tumbling_window(nodes)
+                elif self.win_kind == "sliding":
+                    self._group_by_sliding_window(nodes)
+                else:
+                    raise ValueError(f"Unknown window type {self.win_kind}")
 
-                    pbar.update(1)
-
-                pbar.close()
             with open(sequence_file, 'w', encoding='utf-8') as writer:
                 for block in self.blocks:
-                    writer.write(':'.join([block, ' '.join([str(x) for x in self.block2seqs[block]])]) + '\n')
+                    writer.write(':'.join([block, ' '.join(
+                        [str(x) for x in self.block2seqs[block]])]) + '\n')
 
             with open(label_file, 'w', encoding='utf-8') as writer:
                 for block in self.block2label.keys():
                     writer.write(':'.join([block, self.block2label[block]]) + '\n')
 
         self.logger.info('Extraction finished successfully.')
-        pass
+
+    def _component_grouping(self, reader):
+        nodes = OrderedDict()
+        if self.group_component:
+            for idx, line in enumerate(reader):
+                tokens = line.strip().split()
+                node = str(tokens[3])
+                if node not in nodes.keys():
+                    nodes[node] = []
+                nodes[node].append((idx, line.strip()))
+            self._dataset_lines = nodes[node][-1][0] + 1
+        else:
+            nodes[''] = [(idx, line.strip()) for idx, line in enumerate(reader)]
+            self._dataset_lines = nodes[''][-1][0] + 1
+        return nodes
+
+    def _group_by_tumbling_window(self, nodes: Dict[str, List[Tuple[int, str]]]):
+        win_secs = self.win_secs
+        win_lines = self.win_lines
+
+        def get_window_end(ts_i_):
+            return ts_i_ + win_secs if win_secs is not None else None
+
+        if win_secs is not None and win_lines is not None:
+            def end_condition(seq_, ts_i_, window_end_):
+                return window_end_ is not None and (
+                        ts_i_ > window_end_ or len(seq_) + 1 > win_lines
+                )
+        elif win_secs is not None:
+            def end_condition(_, ts_i_, window_end_):
+                return window_end_ is not None and ts_i_ > window_end_
+        elif win_lines is not None:
+            def end_condition(seq_, _, _a):
+                return seq_ is not None and len(seq_) + 1 > win_lines
+        else:
+            raise ValueError("Either win_secs or win_lines must be set")
+
+        def find_hist_bin(value, bins):
+            for k in bins:
+                if value <= k:
+                    return k
+            return k
+
+        self.logger.info(
+            f"Max window: {(win_secs or 'unlimited')} seconds, "
+            f"{(win_lines or 'unlimited')} lines"
+        )
+        pbar = tqdm(total=self._dataset_lines, unit="lines")
+
+        time_lengths = [
+            0, 1, 2, 5, 10, 20, 30, 60, 120, 300, 600, 1200, 1800, 3600, 3600 * 24,
+                                                                         3600 * 24 * 7,
+                                                                         3600 * 24 * 30
+        ]
+        line_lengths = [
+            0, 1, 2, 5, 10, 50, 100, 200, 500, 1000, 5000, 10000, 15000, 20000, 50000,
+            100000
+        ]
+        hist2d = pd.DataFrame(index=time_lengths, columns=line_lengths).fillna(0)
+        hist2d_anomalies = hist2d.copy()
+
+        real_lengths = []
+        ts_first = 0
+        ts_last = 0
+        for node, seq in nodes.items():
+            b_id = None
+            window_end = None
+            label = "Normal"
+            for i, line in seq:
+                line_label, ts, _ = line.split(" ", maxsplit=2)
+                ts_i = int(ts)
+
+                if b_id is not None and end_condition(
+                        self.block2seqs[b_id], ts_i, window_end
+                ):
+                    # Close the current block
+                    self.block2label[b_id] = label
+                    pbar.update(len(self.block2seqs[b_id]))
+                    real_lengths.append(ts_last - ts_first)
+
+                    # Find the right bin for the histogram
+                    x = find_hist_bin(ts_last - ts_first, hist2d.index)
+                    y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
+
+                    hist2d.loc[x, y] += 1
+                    if label == "Anomalous":
+                        hist2d_anomalies.loc[x, y] += 1
+
+                    # Reset the block
+                    b_id = None
+                    window_end = None
+
+                if b_id is None:
+                    # Start a new block
+                    b_id = f"{node}:{i}"
+                    ts_first = ts_i
+                    window_end = get_window_end(ts_i)
+                    self.blocks.append(b_id)
+                    self.block2seqs[b_id] = []
+                    label = "Normal"
+
+                if not line_label.startswith('-'):
+                    label = "Anomalous"
+                self.block2seqs[b_id].append(i)
+                ts_last = ts_i
+
+            else:
+                # Close the last block in sequence
+                self.block2label[b_id] = label
+                pbar.update(len(self.block2seqs[b_id]))
+                real_lengths.append(ts_last - ts_first)
+
+                # Find the right bin for the histogram
+                x = find_hist_bin(ts_last - ts_first, hist2d.index)
+                y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
+                hist2d.loc[x, y] += 1
+        pbar.close()
+
+        self.logger.debug(
+            f"blocks {len(self.blocks)}, seqs {len(self.block2seqs)}, "
+            f"lines {sum(len(seq) for seq in self.block2seqs.values())}"
+        )
+        self.logger.debug(
+            f"labels {len(self.block2label)}, anomalous "
+            f"{sum(1 for label in self.block2label.values() if label == 'Anomalous')}"
+        )
+
+        # Make histogram of sequence lengths
+        seq_lengths = [len(seq) for seq in self.block2seqs.values()]
+        self.logger.debug(
+            f"Sequence lengths: min {min(seq_lengths)}, max {max(seq_lengths)}, "
+            f"avg {np.mean(seq_lengths):.2f}, median {np.median(seq_lengths)}"
+        )
+
+        # Make time histogram
+        self.logger.debug(
+            f"Time lengths: min {min(real_lengths)}, max {max(real_lengths)}, "
+            f"avg {np.mean(real_lengths):.2f}, median {np.median(real_lengths)}"
+        )
+
+        # Make 2D histogram
+        self.logger.debug("2D histogram:")
+        self.logger.debug(hist2d)
+        self.logger.debug(
+            f"rows:\n{hist2d.sum(axis=1)}\n"
+            f"cols:\n{hist2d.sum(axis=0)}\n"
+            f"total: {hist2d.sum(axis=0).sum()}"
+        )
+
+        self.logger.debug("2D histogram (anomalies):")
+        self.logger.debug(hist2d_anomalies)
+
+        self.logger.debug("2D histogram (normal):")
+        self.logger.debug(hist2d - hist2d_anomalies)
+
+    def _group_by_sliding_window(self, nodes: Dict[str, List[Tuple[int, str]]]):
+        win_secs = self.win_secs
+        win_lines = self.win_lines
+
+        step = self.win_step
+
+        def get_window_end(ts_i_):
+            return ts_i_ + win_secs if win_secs is not None else None
+
+        if win_secs is not None and win_lines is not None:
+            def end_condition(seq_, ts_i_, window_end_):
+                return window_end_ is not None and (
+                        ts_i_ > window_end_ or len(seq_) + 1 > win_lines
+                )
+        elif win_secs is not None:
+            def end_condition(_, ts_i_, window_end_):
+                return window_end_ is not None and ts_i_ > window_end_
+        elif win_lines is not None:
+            def end_condition(seq_, _, _a):
+                return seq_ is not None and len(seq_) + 1 > win_lines
+        else:
+            raise ValueError("Either win_secs or win_lines must be set")
+
+        def find_hist_bin(value, bins):
+            for k in bins:
+                if value <= k:
+                    return k
+            return k
+
+        self.logger.info(
+            f"Max window: {(win_secs or 'unlimited')} seconds, "
+            f"{(win_lines or 'unlimited')} lines"
+        )
+        pbar = tqdm(total=self._dataset_lines, unit="lines")
+
+        time_lengths = [
+            0, 1, 2, 5, 10, 20, 30, 60, 120, 300, 600, 1200, 1800, 3600, 3600 * 24,
+                                                                         3600 * 24 * 7,
+                                                                         3600 * 24 * 30
+        ]
+        line_lengths = [
+            0, 1, 2, 5, 10, 50, 100, 200, 500, 1000, 5000, 10000, 15000, 20000, 50000,
+            100000
+        ]
+        hist2d = pd.DataFrame(index=time_lengths, columns=line_lengths).fillna(0)
+        hist2d_anomalies = hist2d.copy()
+
+        real_lengths = []
+
+        for node, seq in nodes.items():
+            b_id = None
+            bi = 0
+
+            sliding_buffer = []
+            sliding_ts_buffer = []
+            sliding_anomalous = []
+
+            ts_first = 0
+            ts_last = 0
+
+            window_end = None
+
+            label = "Normal"
+            for i, line in seq:
+                line_label, ts, _ = line.split(" ", maxsplit=2)
+                ts_i = int(ts)
+
+                while b_id is not None and end_condition(sliding_buffer, ts_i, window_end):
+                    # Close the current block
+                    self.block2label[b_id] = label
+                    self.block2seqs[b_id] = sliding_buffer.copy()
+                    real_lengths.append(ts_last - ts_first)
+
+                    # Find the right bin for the histogram
+                    x = find_hist_bin(ts_last - ts_first, hist2d.index)
+                    y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
+
+                    hist2d.loc[x, y] += 1
+                    if label == "Anomalous":
+                        hist2d_anomalies.loc[x, y] += 1
+
+                    if len(sliding_buffer) > step:
+                        # Restart the block moving by step
+                        sliding_buffer = sliding_buffer[step:]
+                        sliding_ts_buffer = sliding_ts_buffer[step:]
+                        sliding_anomalous = sliding_anomalous[step:]
+
+                        b_id = f"{node}:{bi}"
+                        bi += 1
+                        ts_first = sliding_ts_buffer[0]
+                        window_end = get_window_end(ts_first)
+                        self.blocks.append(b_id)
+                        label = "Normal" if not any(sliding_anomalous) else "Anomalous"
+                    else:
+                        # Reset the block
+                        b_id = None
+                        window_end = None
+                        sliding_buffer.clear()
+                        sliding_ts_buffer.clear()
+                        sliding_anomalous.clear()
+
+
+                if b_id is None:
+                    # Start a new block
+                    b_id = f"{node}:{bi}"
+                    bi += 1
+                    ts_first = ts_i
+                    window_end = get_window_end(ts_i)
+                    self.blocks.append(b_id)
+                    label = "Normal"
+
+                if not line_label.startswith('-'):
+                    label = "Anomalous"
+                    sliding_anomalous.append(True)
+                else:
+                    sliding_anomalous.append(False)
+                sliding_buffer.append(i)
+                sliding_ts_buffer.append(ts_i)
+                ts_last = ts_i
+
+                # Include growing buffer in output
+                self.block2label[b_id] = label
+                self.block2seqs[b_id] = sliding_buffer.copy()
+                real_lengths.append(ts_last - ts_first)
+                b_id = f"{node}:{bi}"
+                bi += 1
+
+                pbar.update(1)
+
+            else:
+                # Close the last block in sequence
+                self.block2label[b_id] = label
+                self.block2seqs[b_id] = sliding_buffer.copy()
+                real_lengths.append(ts_last - ts_first)
+
+                # Find the right bin for the histogram
+                x = find_hist_bin(ts_last - ts_first, hist2d.index)
+                y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
+                hist2d.loc[x, y] += 1
+        pbar.close()
+
+        self.logger.debug(
+            f"blocks {len(self.blocks)}, seqs {len(self.block2seqs)}, "
+            f"lines {sum(len(seq) for seq in self.block2seqs.values())}"
+        )
+        self.logger.debug(
+            f"labels {len(self.block2label)}, anomalous "
+            f"{sum(1 for label in self.block2label.values() if label == 'Anomalous')}"
+        )
+
+        # Make histogram of sequence lengths
+        seq_lengths = [len(seq) for seq in self.block2seqs.values()]
+        self.logger.debug(
+            f"Sequence lengths: min {min(seq_lengths)}, max {max(seq_lengths)}, "
+            f"avg {np.mean(seq_lengths):.2f}, median {np.median(seq_lengths)}"
+        )
+
+        # Make time histogram
+        self.logger.debug(
+            f"Time lengths: min {min(real_lengths)}, max {max(real_lengths)}, "
+            f"avg {np.mean(real_lengths):.2f}, median {np.median(real_lengths)}"
+        )
+
+        # Make 2D histogram
+        self.logger.debug("2D histogram:")
+        self.logger.debug(hist2d)
+        self.logger.debug(
+            f"rows:\n{hist2d.sum(axis=1)}\n"
+            f"cols:\n{hist2d.sum(axis=0)}\n"
+            f"total: {hist2d.sum(axis=0).sum()}"
+        )
+
+        self.logger.debug("2D histogram (anomalies):")
+        self.logger.debug(hist2d_anomalies)
+
+        self.logger.debug("2D histogram (normal):")
+        self.logger.debug(hist2d - hist2d_anomalies)
