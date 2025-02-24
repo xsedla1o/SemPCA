@@ -4,9 +4,7 @@ import os
 import re
 from collections import Counter
 
-from tqdm import tqdm
-
-from utils.common import like_camel_to_tokens
+from utils.common import like_camel_to_tokens, tqdm
 
 total_words = 0
 num_oov = 0

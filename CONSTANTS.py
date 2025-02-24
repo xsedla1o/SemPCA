@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 from collections import Counter
-from tqdm import *
+from utils.common import *
 import regex as re
 import logging
 from collections import Counter

@@ -1,28 +1,12 @@
+import sys
+
 from CONSTANTS import *
+from entities.TensorInstances import TInstWithLogits, TensorInstance, \
+    DualTensorInstance, SequentialTensorInstance
+from entities.instances import SubSequenceInstance
 from sklearn.metrics import precision_recall_fscore_support
 from torch.autograd import Variable
-
-from entities.TensorInstances import TInstWithLogits, TensorInstance, DualTensorInstance, SequentialTensorInstance
-from entities.instances import SubSequenceInstance
-
-# Dispose Loggers.
-CommonLogger = logging.getLogger('common')
-CommonLogger.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler(sys.stderr)
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
-
-file_handler = logging.FileHandler(os.path.join(LOG_ROOT, 'LogRobust.log'))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
-
-CommonLogger.addHandler(console_handler)
-CommonLogger.addHandler(file_handler)
-CommonLogger.info(
-    'Construct logger for Common Methods succeeded, current working directory: %s, logs will be written in %s' %
-    (os.getcwd(), LOG_ROOT))
+from tqdm import tqdm as tqdm_original
 
 
 def metrics(y_pred, y_true):
@@ -365,3 +349,15 @@ def update_instances(train=None, test=None):
         inst.sequence.clear()
         inst.sequence = processed_seq
     return train, test, mapper
+
+
+def tqdm(iterable=None, desc='', total=None, unit='it', ncols=None, leave=True, **kwargs):
+    """
+    A wrapper for tqdm to hide the progress bar when output is redirected to a file.
+    """
+    if hasattr(sys.stdout, 'isatty') and sys.stdout.isatty():
+        return tqdm_original(
+            iterable, desc=desc, total=total, unit=unit, ncols=ncols, leave=leave,
+            **kwargs
+        )
+    return iterable

@@ -1,5 +1,3 @@
-import tqdm
-
 from CONSTANTS import *
 from models.gru import AttGRUModel
 from module.Attention import LinearAttention
