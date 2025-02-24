@@ -14,7 +14,7 @@ from utils.common import data_iter, generate_tinsts
 if __name__ == '__main__':
 
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('--dataset', default='Spirit', type=str, help='Target dataset. Default HDFS')
+    argparser.add_argument('--dataset', default='HDFS', type=str, help='Target dataset. Default HDFS')
     argparser.add_argument('--mode', default='train', type=str, help='train or test')
     argparser.add_argument('--parser', default='IBM', type=str,
                            help='Select parser, please see parser list for detail. Default Official.')
