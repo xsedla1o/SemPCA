@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sempca"
+version = "0.1.0"
+description = """SemPCA is an artifact of an empirical study: \
+Try with Simpler – An Evaluation of Improved Principle Component Analysis \
+in Log-based Anomaly Detection."""
+authors = [
+    { name = "Lin Yang", email = "linyang@tju.edu.cn" },
+    { name = "Ondrej Sedlacek", email = "xsedla1o@stud.fit.vutbr.cz" }
+]
+
+[tool.setuptools.packages.find]
+include = ["sempca*"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
