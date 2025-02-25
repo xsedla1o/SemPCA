@@ -10,9 +10,13 @@ class CPUEmbedding(nn.Module):
         self.embedding_dim = embedding_dim
         if padding_idx is not None:
             if padding_idx > 0:
-                assert padding_idx < self.num_embeddings, 'Padding_idx must be within num_embeddings'
+                assert padding_idx < self.num_embeddings, (
+                    "Padding_idx must be within num_embeddings"
+                )
             elif padding_idx < 0:
-                assert padding_idx >= -self.num_embeddings, 'Padding_idx must be within num_embeddings'
+                assert padding_idx >= -self.num_embeddings, (
+                    "Padding_idx must be within num_embeddings"
+                )
                 padding_idx = self.num_embeddings + padding_idx
         self.padding_idx = padding_idx
         self.weight = Parameter(torch.Tensor(num_embeddings, embedding_dim))
@@ -26,8 +30,8 @@ class CPUEmbedding(nn.Module):
     def _apply(self, fn):
         str_func = str(fn)
         print(str_func)
-        if 'cuda.<locals>.<lambda>' in str_func:
-            print('Always in cpu: function disabled')
+        if "cuda.<locals>.<lambda>" in str_func:
+            print("Always in cpu: function disabled")
             return self
 
         for module in self.children():
@@ -48,11 +52,11 @@ class CPUEmbedding(nn.Module):
         return self
 
     def to(self, device=None):
-        print('Always in cpu')
+        print("Always in cpu")
         return self.cpu()
 
     def cuda(self, device=None):
-        print('Always in cpu')
+        print("Always in cpu")
         return self.cpu()
 
     def forward(self, input):
@@ -69,9 +73,9 @@ class CPUEmbedding(nn.Module):
             return output
 
     def extra_repr(self):
-        s = '{num_embeddings}, {embedding_dim}'
+        s = "{num_embeddings}, {embedding_dim}"
         if self.padding_idx is not None:
-            s += ', padding_idx={padding_idx}'
+            s += ", padding_idx={padding_idx}"
         return s.format(**self.__dict__)
 
 
@@ -82,9 +86,13 @@ class CPUVocabEmbed(nn.Module):
         self.word_dim = word_dim
         if padding_idx is not None:
             if padding_idx > 0:
-                assert padding_idx < self.num_embeddings, 'Padding_idx must be within num_embeddings'
+                assert padding_idx < self.num_embeddings, (
+                    "Padding_idx must be within num_embeddings"
+                )
             elif padding_idx < 0:
-                assert padding_idx >= -self.num_embeddings, 'Padding_idx must be within num_embeddings'
+                assert padding_idx >= -self.num_embeddings, (
+                    "Padding_idx must be within num_embeddings"
+                )
                 padding_idx = self.num_embeddings + padding_idx
         self.padding_idx = padding_idx
         self.weight = Parameter(torch.Tensor(vocab_size, word_dim))
@@ -98,8 +106,8 @@ class CPUVocabEmbed(nn.Module):
     def _apply(self, fn):
         str_func = str(fn)
         print(str_func)
-        if 'cuda.<locals>.<lambda>' in str_func:
-            print('Always in cpu: function disabled')
+        if "cuda.<locals>.<lambda>" in str_func:
+            print("Always in cpu: function disabled")
             return self
 
         for module in self.children():
@@ -120,7 +128,7 @@ class CPUVocabEmbed(nn.Module):
         return self
 
     def cuda(self, device=None):
-        print('Always in cpu')
+        print("Always in cpu")
         return self.cpu()
 
     def forward(self, input):
@@ -137,7 +145,7 @@ class CPUVocabEmbed(nn.Module):
             return output
 
     def extra_repr(self):
-        s = '{num_embeddings}, {embedding_dim}'
+        s = "{num_embeddings}, {embedding_dim}"
         if self.padding_idx is not None:
-            s += ', padding_idx={padding_idx}'
+            s += ", padding_idx={padding_idx}"
         return s.format(**self.__dict__)

@@ -20,7 +20,7 @@ from torch.nn.parameter import Parameter
 from multiprocessing import Manager, Pool
 from copy import deepcopy
 
-print('Seeding everything...')
+print("Seeding everything...")
 seed = 6
 random.seed(seed)  # Python random module.
 np.random.seed(seed)  # Numpy module.
@@ -29,17 +29,20 @@ torch.cuda.manual_seed(seed)  # Torch GPU random seed module.
 torch.cuda.manual_seed_all(seed)  # Torch multi-GPU random seed module.
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-os.environ['PYTHONHASHSEED'] = str(seed)
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["PYTHONHASHSEED"] = str(seed)
 
-print('Seeding Finished')
+print("Seeding Finished")
 
 # Device configuration
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 SESSION = hashlib.md5(
-    time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time() + 8 * 60 * 60)).encode('utf-8')).hexdigest()
-SESSION = 'SESSION_' + SESSION
+    time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time() + 8 * 60 * 60)).encode(
+        "utf-8"
+    )
+).hexdigest()
+SESSION = "SESSION_" + SESSION
 
 
 def GET_PROJECT_ROOT():
@@ -48,7 +51,7 @@ def GET_PROJECT_ROOT():
 
 
 def GET_LOGS_ROOT():
-    log_file_root = os.path.join(GET_PROJECT_ROOT(), 'logs')
+    log_file_root = os.path.join(GET_PROJECT_ROOT(), "logs")
     if not os.path.exists(log_file_root):
         os.makedirs(log_file_root)
     return log_file_root

@@ -2,7 +2,7 @@ from CONSTANTS import *
 
 
 def cut_by_82_with_shuffle(instances):
-    '''
+    """
     Experimental Setting with LogAnomaly
     Parameters
     ----------
@@ -11,7 +11,7 @@ def cut_by_82_with_shuffle(instances):
     Returns
     -------
     Training validating and testing log data.
-    '''
+    """
     np.random.seed(seed)
     np.random.shuffle(instances)
     train_split = math.ceil(0.8 * len(instances))
@@ -22,7 +22,7 @@ def cut_by_82_with_shuffle(instances):
 
 
 def cut_by_613(instances):
-    '''
+    """
     Experimental Setting according to PLELog.
     Parameters
     ----------
@@ -31,7 +31,7 @@ def cut_by_613(instances):
     Returns
     -------
     training, validating and testing log data.
-    '''
+    """
     train_split = int(0.7 * len(instances))
     train, test = instances[:train_split], instances[train_split:]
     random.seed(seed)
@@ -40,5 +40,3 @@ def cut_by_613(instances):
     dev = train[train_split:]
     train = train[:train_split]
     return train, dev, test
-
-

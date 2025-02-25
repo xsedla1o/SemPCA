@@ -10,6 +10,7 @@ Reference:
         Symposium on Operating Systems Principles (SOSP), 2009.
 
 """
+
 import sys
 
 sys.path.extend([".", ".."])
@@ -20,23 +21,30 @@ from utils.common import metrics
 
 class PCA_PlusPlus(object):
     # Dispose Loggers.
-    _logger = logging.getLogger('PCA_PlusPlus')
+    _logger = logging.getLogger("PCA_PlusPlus")
     _logger.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
+        logging.Formatter(
+            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+        )
+    )
 
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, 'PCA_PlusPlus.log'))
+    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "PCA_PlusPlus.log"))
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
+        logging.Formatter(
+            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+        )
+    )
 
     _logger.addHandler(console_handler)
     _logger.addHandler(file_handler)
     _logger.info(
-        'Construct logger for PCA_PlusPlus succeeded, current working directory: %s, logs will be written in %s' %
-        (os.getcwd(), LOG_ROOT))
+        "Construct logger for PCA_PlusPlus succeeded, current working directory: %s, logs will be written in %s"
+        % (os.getcwd(), LOG_ROOT)
+    )
 
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
         self.proj_C = None
@@ -51,7 +59,7 @@ class PCA_PlusPlus(object):
         return PCA._logger
 
     def fit(self, X):
-        self.logger.info('====== Model summary ======')
+        self.logger.info("====== Model summary ======")
         num_instances, num_events = X.shape
         X_cov = np.dot(X.T, X) / float(num_instances)
         U, sigma, V = np.linalg.svd(X_cov)
@@ -69,8 +77,12 @@ class PCA_PlusPlus(object):
         I = np.identity(num_events, int)
         self.components = P
         self.proj_C = I - np.dot(P, P.T)
-        self.logger.info('n_components: {}'.format(n_components))
-        self.logger.info('Project matrix shape: {}-by-{}'.format(self.proj_C.shape[0], self.proj_C.shape[1]))
+        self.logger.info("n_components: {}".format(n_components))
+        self.logger.info(
+            "Project matrix shape: {}-by-{}".format(
+                self.proj_C.shape[0], self.proj_C.shape[1]
+            )
+        )
 
         if not self.threshold:
             phi = np.zeros(3)
@@ -78,13 +90,18 @@ class PCA_PlusPlus(object):
                 for j in range(n_components, num_events):
                     phi[i] += np.power(sigma[j], i + 1)
             h0 = 1.0 - 2 * phi[0] * phi[2] / (3.0 * phi[1] * phi[1])
-            self.threshold = phi[0] * np.power(self.c_alpha * np.sqrt(2 * phi[1] * h0 * h0) / phi[0]
-                                               + 1.0 + phi[1] * h0 * (h0 - 1) / (phi[0] * phi[0]),
-                                               1.0 / h0)
-        self.logger.info('SPE threshold: {}\n'.format(self.threshold))
+            self.threshold = phi[0] * np.power(
+                self.c_alpha * np.sqrt(2 * phi[1] * h0 * h0) / phi[0]
+                + 1.0
+                + phi[1] * h0 * (h0 - 1) / (phi[0] * phi[0]),
+                1.0 / h0,
+            )
+        self.logger.info("SPE threshold: {}\n".format(self.threshold))
 
     def predict(self, X, fixed_threshold=None):
-        assert self.proj_C is not None, 'PCA model needs to be trained before prediction.'
+        assert self.proj_C is not None, (
+            "PCA model needs to be trained before prediction."
+        )
         y_pred = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
             y_a = np.dot(self.proj_C, X[i, :])
@@ -99,9 +116,12 @@ class PCA_PlusPlus(object):
 
     def evaluate(self, X, y_true, fixed_threshold=None):
         if fixed_threshold is not None:
-            self.logger.info('Threshold: %.8f' % fixed_threshold)
+            self.logger.info("Threshold: %.8f" % fixed_threshold)
         else:
-            self.logger.info('No given threshold, will be using default PCA threshold: %.8f.' % self.threshold)
+            self.logger.info(
+                "No given threshold, will be using default PCA threshold: %.8f."
+                % self.threshold
+            )
             fixed_threshold = self.threshold
         y_pred = self.predict(X, fixed_threshold)
         TP, TN, FP, FN = 0, 0, 0, 0
@@ -121,46 +141,51 @@ class PCA_PlusPlus(object):
         else:
             precision, recall, f1 = metrics(y_pred, y_true)
         self.logger.info(
-            'Precision: {:.0f}/{:.0f} = {:.4f}, recall: {:.0f}/{:.0f} = {:.4f}, F1-measure: {:.4f}'.format(TP,
-                                                                                                           (TP + FP),
-                                                                                                           precision,
-                                                                                                           TP,
-                                                                                                           (TP + FN),
-                                                                                                           recall, f1))
+            "Precision: {:.0f}/{:.0f} = {:.4f}, recall: {:.0f}/{:.0f} = {:.4f}, F1-measure: {:.4f}".format(
+                TP, (TP + FP), precision, TP, (TP + FN), recall, f1
+            )
+        )
 
         return precision, recall, f1
 
 
 class PCA(object):
     # Dispose Loggers.
-    _logger = logging.getLogger('PCA')
+    _logger = logging.getLogger("PCA")
     _logger.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
+        logging.Formatter(
+            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+        )
+    )
 
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, 'PCA.log'))
+    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "PCA.log"))
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
+        logging.Formatter(
+            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+        )
+    )
 
     _logger.addHandler(console_handler)
     _logger.addHandler(file_handler)
     _logger.info(
-        'Construct logger for PCA succeeded, current working directory: %s, logs will be written in %s' %
-        (os.getcwd(), LOG_ROOT))
+        "Construct logger for PCA succeeded, current working directory: %s, logs will be written in %s"
+        % (os.getcwd(), LOG_ROOT)
+    )
 
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
-        """ The PCA model for anomaly detection
+        """The PCA model for anomaly detection
 
         Attributes
         ----------
             proj_C: The projection matrix for projecting feature vector to abnormal space
             n_components: float/int, number of principal compnents or the variance ratio they cover
-            threshold: float, the anomaly detection threshold. When setting to None, the threshold 
+            threshold: float, the anomaly detection threshold. When setting to None, the threshold
                 is automatically caculated using Q-statistics
-            c_alpha: float, the c_alpha parameter for caculating anomaly detection threshold using 
+            c_alpha: float, the c_alpha parameter for caculating anomaly detection threshold using
                 Q-statistics. The following is lookup table for c_alpha:
                 c_alpha = 1.7507; # alpha = 0.08
                 c_alpha = 1.9600; # alpha = 0.05
@@ -191,7 +216,7 @@ class PCA(object):
             X: ndarray, the event count matrix of shape num_instances-by-num_events
         """
 
-        self.logger.info('====== Model summary ======')
+        self.logger.info("====== Model summary ======")
         num_instances, num_events = X.shape
         X_cov = np.dot(X.T, X) / float(num_instances)
         U, sigma, V = np.linalg.svd(X_cov)
@@ -209,8 +234,12 @@ class PCA(object):
         I = np.identity(num_events, int)
         self.components = P
         self.proj_C = I - np.dot(P, P.T)
-        self.logger.info('n_components: {}'.format(n_components))
-        self.logger.info('Project matrix shape: {}-by-{}'.format(self.proj_C.shape[0], self.proj_C.shape[1]))
+        self.logger.info("n_components: {}".format(n_components))
+        self.logger.info(
+            "Project matrix shape: {}-by-{}".format(
+                self.proj_C.shape[0], self.proj_C.shape[1]
+            )
+        )
 
         if not self.threshold:
             # Calculate threshold using Q-statistic. Information can be found at:
@@ -220,13 +249,18 @@ class PCA(object):
                 for j in range(n_components, num_events):
                     phi[i] += np.power(sigma[j], i + 1)
             h0 = 1.0 - 2 * phi[0] * phi[2] / (3.0 * phi[1] * phi[1])
-            self.threshold = phi[0] * np.power(self.c_alpha * np.sqrt(2 * phi[1] * h0 * h0) / phi[0]
-                                               + 1.0 + phi[1] * h0 * (h0 - 1) / (phi[0] * phi[0]),
-                                               1.0 / h0)
-        self.logger.info('SPE threshold: {}\n'.format(self.threshold))
+            self.threshold = phi[0] * np.power(
+                self.c_alpha * np.sqrt(2 * phi[1] * h0 * h0) / phi[0]
+                + 1.0
+                + phi[1] * h0 * (h0 - 1) / (phi[0] * phi[0]),
+                1.0 / h0,
+            )
+        self.logger.info("SPE threshold: {}\n".format(self.threshold))
 
     def predict(self, X, fixed_threshold=None):
-        assert self.proj_C is not None, 'PCA model needs to be trained before prediction.'
+        assert self.proj_C is not None, (
+            "PCA model needs to be trained before prediction."
+        )
         y_pred = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
             y_a = np.dot(self.proj_C, X[i, :])
@@ -241,9 +275,12 @@ class PCA(object):
 
     def evaluate(self, X, y_true, fixed_threshold=None):
         if fixed_threshold is not None:
-            self.logger.info('Threshold: %.8f' % fixed_threshold)
+            self.logger.info("Threshold: %.8f" % fixed_threshold)
         else:
-            self.logger.info('No given threshold, will be using default PCA threshold: %.8f.' % self.threshold)
+            self.logger.info(
+                "No given threshold, will be using default PCA threshold: %.8f."
+                % self.threshold
+            )
             fixed_threshold = self.threshold
         y_pred = self.predict(X, fixed_threshold)
         TP, TN, FP, FN = 0, 0, 0, 0
@@ -263,11 +300,9 @@ class PCA(object):
         else:
             precision, recall, f1 = metrics(y_pred, y_true)
         self.logger.info(
-            'Precision: {:.0f}/{:.0f} = {:.4f}, recall: {:.0f}/{:.0f} = {:.4f}, F1-measure: {:.4f}'.format(TP,
-                                                                                                           (TP + FP),
-                                                                                                           precision,
-                                                                                                           TP,
-                                                                                                           (TP + FN),
-                                                                                                           recall, f1))
+            "Precision: {:.0f}/{:.0f} = {:.4f}, recall: {:.0f}/{:.0f} = {:.4f}, F1-measure: {:.4f}".format(
+                TP, (TP + FP), precision, TP, (TP + FN), recall, f1
+            )
+        )
 
         return precision, recall, f1

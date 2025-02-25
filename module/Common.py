@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 from utils.common import orthonormal_initializer
 
+
 class NonLinear(nn.Module):
     def __init__(self, input_size, hidden_size, activation=None):
         super(NonLinear, self).__init__()
@@ -13,7 +14,9 @@ class NonLinear(nn.Module):
             self._activate = lambda x: x
         else:
             if not callable(activation):
-                raise ValueError("activation must be callable: type={}".format(type(activation)))
+                raise ValueError(
+                    "activation must be callable: type={}".format(type(activation))
+                )
             self._activate = activation
 
         self.reset_parameters()

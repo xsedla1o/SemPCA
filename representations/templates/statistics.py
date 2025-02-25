@@ -1,4 +1,3 @@
-
 from CONSTANTS import *
 import os
 import re
@@ -13,25 +12,34 @@ PROJECT_ROOT = GET_PROJECT_ROOT()
 LOG_ROOT = GET_LOGS_ROOT()
 
 
-class Simple_template_TF_IDF():
+class Simple_template_TF_IDF:
     # Dispose Loggers.
-    _logger = logging.getLogger('Simple_template_TF_IDF')
+    _logger = logging.getLogger("Simple_template_TF_IDF")
     _logger.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.DEBUG)
     console_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
+        logging.Formatter(
+            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+        )
+    )
 
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, 'Simple_template_TF_IDF.log'))
+    file_handler = logging.FileHandler(
+        os.path.join(LOG_ROOT, "Simple_template_TF_IDF.log")
+    )
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
+        logging.Formatter(
+            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+        )
+    )
 
     _logger.addHandler(console_handler)
     _logger.addHandler(file_handler)
     _logger.info(
-        'Construct Simple_template_TF_IDF Encoder success, current working directory: %s, logs will be written in %s' %
-        (os.getcwd(), LOG_ROOT))
+        "Construct Simple_template_TF_IDF Encoder success, current working directory: %s, logs will be written in %s"
+        % (os.getcwd(), LOG_ROOT)
+    )
 
     @property
     def logger(self):
@@ -56,7 +64,7 @@ class Simple_template_TF_IDF():
                 if word in self._word2vec.keys():
                     return_list.append(self._word2vec[word])
                 else:
-                    print(word, end=' ')
+                    print(word, end=" ")
                     num_oov += 1
             return np.asarray(return_list, dtype=np.float).sum(axis=0) / len(words)
         else:
@@ -70,10 +78,10 @@ class Simple_template_TF_IDF():
                 return np.zeros(self.vocab_size)
 
     def load_word2vec(self):
-        self.logger.info('Loading word2vec dict.')
-        embed_file = os.path.join(PROJECT_ROOT, 'datasets/glove.6B.300d.txt')
+        self.logger.info("Loading word2vec dict.")
+        embed_file = os.path.join(PROJECT_ROOT, "datasets/glove.6B.300d.txt")
         if os.path.exists(embed_file):
-            with open(embed_file, 'r', encoding='utf-8') as reader:
+            with open(embed_file, "r", encoding="utf-8") as reader:
                 for line in tqdm(reader.readlines()):
                     tokens = line.strip().split()
                     word = tokens[0]
@@ -83,11 +91,12 @@ class Simple_template_TF_IDF():
                     self.vocab_size = len(tokens) - 1
 
                     if len(tokens) != 301:
-                        self.logger.info('Wow: ' + line)
+                        self.logger.info("Wow: " + line)
 
         else:
             self.logger.error(
-                'No pre-trained embedding file(%s) found. Please check.' % embed_file)
+                "No pre-trained embedding file(%s) found. Please check." % embed_file
+            )
             exit(2)
 
     def present(self, id2templates):
@@ -99,13 +108,13 @@ class Simple_template_TF_IDF():
         id2embed = {}
         for id, template in id2templates.items():
             # Preprocess: split by spaces and special characters.
-            template_tokens = re.split(r'[,\!:=\[\]\(\)\$\s\.\/\#\|\\ ]', template)
+            template_tokens = re.split(r"[,\!:=\[\]\(\)\$\s\.\/\#\|\\ ]", template)
             filtered_tokens = []
             for simplified_token in template_tokens:
-                if re.match('[\_]+', simplified_token) is not None:
-                    filtered_tokens.append('')
-                elif re.match('[\-]+', simplified_token) is not None:
-                    filtered_tokens.append('')
+                if re.match("[\_]+", simplified_token) is not None:
+                    filtered_tokens.append("")
+                elif re.match("[\-]+", simplified_token) is not None:
+                    filtered_tokens.append("")
                 else:
                     filtered_tokens.append(simplified_token)
             template_tokens = list(filter(self.not_empty, filtered_tokens))
@@ -116,10 +125,12 @@ class Simple_template_TF_IDF():
                 all_tokens = all_tokens.union(template_tokens)
 
             # Update new processed templates
-            processed_id2templates[id] = ' '.join(template_tokens)
+            processed_id2templates[id] = " ".join(template_tokens)
 
         self.logger.info(
-            'Found %d tokens in %d log templates' % (len(all_tokens), len(processed_id2templates)))
+            "Found %d tokens in %d log templates"
+            % (len(all_tokens), len(processed_id2templates))
+        )
 
         # Calculate IDF score.
         total_templates = len(processed_id2templates)
@@ -147,5 +158,6 @@ class Simple_template_TF_IDF():
                 template_emb += tf * idf * embed
             id2embed[id] = template_emb
         self.logger.info(
-            "OOV Rate: %d/%d = %.4f" % (num_oov, total_words, (num_oov / total_words)))
+            "OOV Rate: %d/%d = %.4f" % (num_oov, total_words, (num_oov / total_words))
+        )
         return id2embed

@@ -5,11 +5,21 @@ from torch.autograd import Variable
 class TInstWithLogits:
     def __init__(self, batch_size, slen, tag_size):
         self.src_ids = []
-        self.src_words = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
-        self.src_masks = Variable(torch.Tensor(batch_size, slen).zero_(), requires_grad=False)
-        self.tags = Variable(torch.FloatTensor(batch_size, tag_size).zero_(), requires_grad=False)
-        self.g_truth = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.word_len = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
+        self.src_words = Variable(
+            torch.LongTensor(batch_size, slen).zero_(), requires_grad=False
+        )
+        self.src_masks = Variable(
+            torch.Tensor(batch_size, slen).zero_(), requires_grad=False
+        )
+        self.tags = Variable(
+            torch.FloatTensor(batch_size, tag_size).zero_(), requires_grad=False
+        )
+        self.g_truth = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
+        self.word_len = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
 
     def to_cuda(self, device):
         self.src_words = self.src_words.cuda(device)
@@ -38,10 +48,18 @@ class TInstWithLogits:
 class TensorInstance:
     def __init__(self, batch_size, slen):
         self.src_ids = []
-        self.src_words = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
-        self.g_truth = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.word_len = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.mask = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
+        self.src_words = Variable(
+            torch.LongTensor(batch_size, slen).zero_(), requires_grad=False
+        )
+        self.g_truth = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
+        self.word_len = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
+        self.mask = Variable(
+            torch.LongTensor(batch_size, slen).zero_(), requires_grad=False
+        )
 
     def to_cuda(self, device):
         self.src_words = self.src_words.cuda(device)
@@ -64,14 +82,23 @@ class TensorInstance:
     @property
     def targets(self):
         return self.g_truth
+
 
 class SequentialTensorInstance:
     def __init__(self, batch_size, slen):
         self.src_ids = []
-        self.src_words = Variable(torch.FloatTensor(batch_size, slen,1).zero_(), requires_grad=False)
-        self.g_truth = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.word_len = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.mask = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
+        self.src_words = Variable(
+            torch.FloatTensor(batch_size, slen, 1).zero_(), requires_grad=False
+        )
+        self.g_truth = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
+        self.word_len = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
+        self.mask = Variable(
+            torch.LongTensor(batch_size, slen).zero_(), requires_grad=False
+        )
 
     def to_cuda(self, device):
         self.src_words = self.src_words.cuda(device)
@@ -95,14 +122,25 @@ class SequentialTensorInstance:
     def targets(self):
         return self.g_truth
 
+
 class DualTensorInstance:
     def __init__(self, batch_size, slen, quantity_dim):
         self.src_ids = []
-        self.sequential = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
-        self.quantity = Variable(torch.FloatTensor(batch_size, quantity_dim).zero_(), requires_grad=False)
-        self.g_truth = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.word_len = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
-        self.mask = Variable(torch.LongTensor(batch_size, slen).zero_(), requires_grad=False)
+        self.sequential = Variable(
+            torch.LongTensor(batch_size, slen).zero_(), requires_grad=False
+        )
+        self.quantity = Variable(
+            torch.FloatTensor(batch_size, quantity_dim).zero_(), requires_grad=False
+        )
+        self.g_truth = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
+        self.word_len = Variable(
+            torch.LongTensor(batch_size).zero_(), requires_grad=False
+        )
+        self.mask = Variable(
+            torch.LongTensor(batch_size, slen).zero_(), requires_grad=False
+        )
 
     def to_cuda(self, device):
         self.sequential = self.sequential.cuda(device)
@@ -126,4 +164,3 @@ class DualTensorInstance:
     @property
     def targets(self):
         return self.g_truth
-

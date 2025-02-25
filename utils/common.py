@@ -1,8 +1,12 @@
 import sys
 
 from CONSTANTS import *
-from entities.TensorInstances import TInstWithLogits, TensorInstance, \
-    DualTensorInstance, SequentialTensorInstance
+from entities.TensorInstances import (
+    TInstWithLogits,
+    TensorInstance,
+    DualTensorInstance,
+    SequentialTensorInstance,
+)
 from entities.instances import SubSequenceInstance
 from sklearn.metrics import precision_recall_fscore_support
 from torch.autograd import Variable
@@ -10,7 +14,7 @@ from tqdm import tqdm as tqdm_original
 
 
 def metrics(y_pred, y_true):
-    """ Calucate evaluation metrics for precision, recall, and f1.
+    """Calucate evaluation metrics for precision, recall, and f1.
 
     Arguments
     ---------
@@ -23,7 +27,9 @@ def metrics(y_pred, y_true):
         recall: float, recall value
         f1: float, f1 measure value
     """
-    precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average='binary')
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        y_true, y_pred, average="binary"
+    )
     return precision, recall, f1
 
 
@@ -43,19 +49,19 @@ def not_empty(s):
 
 def like_camel_to_tokens(camel_format):
     simple_format = []
-    temp = ''
+    temp = ""
     flag = False
 
     if isinstance(camel_format, str):
         for i in range(len(camel_format)):
-            if camel_format[i] == '-' or camel_format[i] == '_':
+            if camel_format[i] == "-" or camel_format[i] == "_":
                 simple_format.append(temp)
-                temp = ''
+                temp = ""
                 flag = False
             elif camel_format[i].isdigit():
                 simple_format.append(temp)
                 simple_format.append(camel_format[i])
-                temp = ''
+                temp = ""
                 flag = False
             elif camel_format[i].islower():
                 if flag:
@@ -69,7 +75,7 @@ def like_camel_to_tokens(camel_format):
             else:
                 if not flag:
                     simple_format.append(temp)
-                    temp = ''
+                    temp = ""
                 temp += camel_format[i].lower()
                 flag = True  # 需要回退
             if i == len(camel_format) - 1:
@@ -83,8 +89,8 @@ def generate_inputs_and_labels(insts):
     labels = np.zeros(len(insts))
     for idx, inst in enumerate(insts):
         inputs.append([int(x) for x in inst.sequence])
-        if inst.label in ['Normal', 'Anomalous']:
-            if inst.label == 'Normal':
+        if inst.label in ["Normal", "Anomalous"]:
+            if inst.label == "Normal":
                 label = 0
             else:
                 label = 1
@@ -105,9 +111,11 @@ def batch_slice(data, batch_size):
 
 def data_iter(data, batch_size, shuffle=True):
     batched_data = []
-    if shuffle: np.random.shuffle(data)
+    if shuffle:
+        np.random.shuffle(data)
     batched_data.extend(list(batch_slice(data, batch_size)))
-    if shuffle: np.random.shuffle(batched_data)
+    if shuffle:
+        np.random.shuffle(batched_data)
     for batch in batched_data:
         yield batch
 
@@ -139,7 +147,7 @@ def generate_tinsts(batched_insts, vocab):
 def generate_subseq_dual_tinsts(batched_insts, vocab, feature_extractor):
     batch_size = len(batched_insts)
     if batch_size == 0:
-        print('Empty')
+        print("Empty")
     # Summarize max length within this batch.
     slen = 0
     for inst in batched_insts:
@@ -167,7 +175,7 @@ def generate_subseq_dual_tinsts(batched_insts, vocab, feature_extractor):
 def generate_subseq_tinsts(batched_insts):
     batch_size = len(batched_insts)
     if batch_size == 0:
-        print('Empty')
+        print("Empty")
     # Summarize max length within this batch.
     slen = 0
     for inst in batched_insts:
@@ -194,13 +202,14 @@ def generate_tinsts_binary_label(batch_insts, tag2id, if_evaluate=False):
     batch_size = len(batch_insts)
     for b in range(1, batch_size):
         cur_slen = len(batch_insts[b].sequence)
-        if cur_slen > slen: slen = cur_slen
+        if cur_slen > slen:
+            slen = cur_slen
     tinst = TInstWithLogits(batch_size, slen, 2)
     b = 0
     for inst in batch_insts:
         tinst.src_ids.append(str(inst.id))
         confidence = 0.5 * inst.confidence
-        if inst.predicted == '':
+        if inst.predicted == "":
             inst.predicted = inst.label
         tinst.tags[b, tag2id[inst.predicted]] = 1 - confidence
         tinst.tags[b, 1 - tag2id[inst.predicted]] = confidence
@@ -218,7 +227,7 @@ def generate_tinsts_binary_label(batch_insts, tag2id, if_evaluate=False):
 
 def batch_variable_inst(insts, tagids, tag_logits, id2tag):
     if tag_logits is None:
-        print('No prediction made, please check.')
+        print("No prediction made, please check.")
         exit(-1)
     for inst, tagid, tag_logit in zip(insts, tagids, tag_logits):
         pred_label = id2tag[tagid]
@@ -231,27 +240,38 @@ def orthonormal_initializer(output_size, input_size):
     """
     print(output_size, input_size)
     I = np.eye(output_size)
-    lr = .1
-    eps = .05 / (output_size + input_size)
+    lr = 0.1
+    eps = 0.05 / (output_size + input_size)
     success = False
     tries = 0
     while not success and tries < 10:
         Q = np.random.randn(input_size, output_size) / np.sqrt(output_size)
         for i in range(100):
             QTQmI = Q.T.dot(Q) - I
-            loss = np.sum(QTQmI ** 2 / 2)
-            Q2 = Q ** 2
-            Q -= lr * Q.dot(QTQmI) / (
-                    np.abs(Q2 + Q2.sum(axis=0, keepdims=True) + Q2.sum(axis=1, keepdims=True) - 1) + eps)
+            loss = np.sum(QTQmI**2 / 2)
+            Q2 = Q**2
+            Q -= (
+                lr
+                * Q.dot(QTQmI)
+                / (
+                    np.abs(
+                        Q2
+                        + Q2.sum(axis=0, keepdims=True)
+                        + Q2.sum(axis=1, keepdims=True)
+                        - 1
+                    )
+                    + eps
+                )
+            )
             if np.max(Q) > 1e6 or loss > 1e6 or not np.isfinite(loss):
                 tries += 1
                 lr /= 2
                 break
         success = True
     if success:
-        print('Orthogonal pretrainer loss: %.2e' % loss)
+        print("Orthogonal pretrainer loss: %.2e" % loss)
     else:
-        print('Orthogonal pretrainer failed, using non-orthogonal random matrix')
+        print("Orthogonal pretrainer failed, using non-orthogonal random matrix")
         Q = np.random.randn(input_size, output_size) / np.sqrt(output_size)
     return np.transpose(Q.astype(np.float32))
 
@@ -273,13 +293,15 @@ def update_sequences(instances, mapping):
     for inst in instances:
         processed_seq = []
         for event in inst.sequence:
-            processed_seq.append(mapping[int(event)] if int(event) in mapping.keys() else vocab_size)
+            processed_seq.append(
+                mapping[int(event)] if int(event) in mapping.keys() else vocab_size
+            )
         inst.sequence.clear()
         inst.sequence = processed_seq
 
 
 def summarize_subsequences(instances, window_size, step_size=1):
-    '''
+    """
     Summarize subsequences for training, mainly used by LogAnomaly and DeepLog.
     Parameters
     ----------
@@ -290,7 +312,7 @@ def summarize_subsequences(instances, window_size, step_size=1):
     Returns
     -------
     Newly generated subsequence instances.
-    '''
+    """
     new_instances = []
     # feature_extractor = FeatureExtractor()
     # train_inputs = []
@@ -311,11 +333,13 @@ def summarize_subsequences(instances, window_size, step_size=1):
         while True:
             if i + window_size >= seq_len:
                 break
-            subsequence = inst.sequence[i:i + window_size]
+            subsequence = inst.sequence[i : i + window_size]
             np_subsequence = np.asarray(subsequence)
             if len(subsequence) == 0:
-                print('Empty')
-            new_inst = SubSequenceInstance(sequential=np_subsequence, label=inst.sequence[i + window_size])
+                print("Empty")
+            new_inst = SubSequenceInstance(
+                sequential=np_subsequence, label=inst.sequence[i + window_size]
+            )
             new_inst.belongs_to = inst.id
             new_instances.append(new_inst)
             i += step_size
@@ -338,26 +362,37 @@ def update_instances(train=None, test=None):
     for inst in train:
         processed_seq = []
         for event in inst.sequence:
-            processed_seq.append(mapper[int(event)] if int(event) in mapper.keys() else vocab_size)
+            processed_seq.append(
+                mapper[int(event)] if int(event) in mapper.keys() else vocab_size
+            )
         inst.sequence.clear()
         inst.sequence = processed_seq
 
     for inst in test:
         processed_seq = []
         for event in inst.sequence:
-            processed_seq.append(mapper[int(event)] if int(event) in mapper.keys() else vocab_size)
+            processed_seq.append(
+                mapper[int(event)] if int(event) in mapper.keys() else vocab_size
+            )
         inst.sequence.clear()
         inst.sequence = processed_seq
     return train, test, mapper
 
 
-def tqdm(iterable=None, desc='', total=None, unit='it', ncols=None, leave=True, **kwargs):
+def tqdm(
+    iterable=None, desc="", total=None, unit="it", ncols=None, leave=True, **kwargs
+):
     """
     A wrapper for tqdm to hide the progress bar when output is redirected to a file.
     """
-    if hasattr(sys.stdout, 'isatty') and sys.stdout.isatty():
+    if hasattr(sys.stdout, "isatty") and sys.stdout.isatty():
         return tqdm_original(
-            iterable, desc=desc, total=total, unit=unit, ncols=ncols, leave=leave,
-            **kwargs
+            iterable,
+            desc=desc,
+            total=total,
+            unit=unit,
+            ncols=ncols,
+            leave=leave,
+            **kwargs,
         )
     return iterable
