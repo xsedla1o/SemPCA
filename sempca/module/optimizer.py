@@ -1,12 +1,19 @@
+import functools
+
 import torch
+
+
+def lr_lambda(epoch, decay, decay_step):
+    return decay ** (epoch // decay_step)
 
 
 class Optimizer:
     def __init__(self, parameter):
         self.optim = torch.optim.Adam(parameter, lr=2e-3, betas=(0.9, 0.9), eps=1e-12)
-        decay, decay_step = 0.75, 1000
-        l = lambda epoch: decay ** (epoch // decay_step)
-        self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optim, lr_lambda=l)
+        self.scheduler = torch.optim.lr_scheduler.LambdaLR(
+            self.optim,
+            lr_lambda=functools.partial(lr_lambda, decay=0.75, decay_step=1000),
+        )
 
     def step(self):
         self.optim.step()
@@ -27,9 +34,10 @@ class Optimizer:
 class SGDOptimizer:
     def __init__(self, parameter):
         self.optim = torch.optim.SGD(parameter, lr=2e-3)
-        decay, decay_step = 0.75, 1000
-        l = lambda epoch: decay ** (epoch // decay_step)
-        self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optim, lr_lambda=l)
+        self.scheduler = torch.optim.lr_scheduler.LambdaLR(
+            self.optim,
+            lr_lambda=functools.partial(lr_lambda, decay=0.75, decay_step=1000),
+        )
 
     def step(self):
         self.optim.step()

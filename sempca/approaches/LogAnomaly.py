@@ -95,7 +95,6 @@ def main():
     log = "layer={}_hidden={}_window={}_epoch={}_num_class={}".format(
         num_layers, hidden_size, window_size, epochs, num_classes
     )
-    best_model_output = output_model_dir + "/" + log + "_best.pt"
     last_model_output = output_model_dir + "/" + log + ".pt"
 
     # Use only normal instances for training.
@@ -112,9 +111,7 @@ def main():
         optimizer = Optimizer(
             filter(lambda p: p.requires_grad, loganomaly.model.parameters())
         )
-        bestClassifier = None
         global_step = 0
-        bestF = 0
         batch_num = int(np.ceil(len(instances) / float(batch_size)))
 
         for epoch in range(epochs):

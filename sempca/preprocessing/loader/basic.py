@@ -65,7 +65,6 @@ class BasicDataLoader:
         persistence_folder = parser.persistence_folder
 
         # Specify persistence files.
-        log_event_seq_file = os.path.join(persistence_folder, "log_sequences.txt")
         log_template_mapping_file = os.path.join(
             persistence_folder, "log_event_mapping.dict"
         )

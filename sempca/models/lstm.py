@@ -626,7 +626,6 @@ class LogRobust:
                 precision = 100 * TP / (TP + FP)
                 recall = 100 * TP / (TP + FN)
                 f = 2 * precision * recall / (precision + recall)
-                end = time.time()
                 self.logger.info(
                     "Precision = %d / %d = %.4f, Recall = %d / %d = %.4f F1 score = %.4f"
                     % (TP, (TP + FP), precision, TP, (TP + FN), recall, f)
@@ -714,7 +713,7 @@ class PLELog:
                 precision = 100 * TP / (TP + FP)
                 recall = 100 * TP / (TP + FN)
                 f = 2 * precision * recall / (precision + recall)
-                end = time.time()
+                time.time()
                 self.logger.info(
                     "Precision = %d / %d = %.4f, Recall = %d / %d = %.4f F1 score = %.4f"
                     % (TP, (TP + FP), precision, TP, (TP + FN), recall, f)

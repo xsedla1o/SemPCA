@@ -86,7 +86,6 @@ def main():
         optimizer = Optimizer(
             filter(lambda p: p.requires_grad, logrobust.model.parameters())
         )
-        bestClassifier = None
         global_step = 0
         bestF = 0
         batch_num = int(np.ceil(len(train) / float(batch_size)))

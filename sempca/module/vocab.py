@@ -3,6 +3,10 @@ import numpy as np
 from sempca.utils import get_logger
 
 
+def reverse_mapping(x):
+    return dict(zip(x, range(len(x))))
+
+
 class Vocab(object):
     # please always set PAD to zero, otherwise will cause a bug in pad filling (Tensor)
     PAD, START, END, UNK = 0, 1, 2, 3
@@ -12,8 +16,8 @@ class Vocab(object):
         self._id2tag = []
         self._id2tag.append("Normal")
         self._id2tag.append("Anomalous")
-        reverse = lambda x: dict(zip(x, range(len(x))))
-        self._tag2id = reverse(self._id2tag)
+
+        self._tag2id = reverse_mapping(self._id2tag)
         if len(self._tag2id) != len(self._id2tag):
             self.logger.info("serious bug: output tags dumplicated, please check!")
         self.logger.info("Vocab info: #output tags %d" % (self.tag_size))
@@ -40,8 +44,8 @@ class Vocab(object):
         word_num = len(self._id2word)
         self.logger.info("Total words: " + str(word_num) + "\n")
         self.logger.info("The dim of pretrained embeddings: %d \n" % (self._embed_dim))
-        reverse = lambda x: dict(zip(x, range(len(x))))
-        self._word2id = reverse(self._id2word)
+
+        self._word2id = reverse_mapping(self._id2word)
 
         oov_id = self._word2id.get("<oov>")
         if self.UNK != oov_id:
@@ -84,8 +88,7 @@ class Vocab(object):
         self.logger.info("Total words: " + str(word_num) + "\n")
         self.logger.info("The dim of pretrained embeddings: %d \n" % (embedding_dim))
 
-        reverse = lambda x: dict(zip(x, range(len(x))))
-        self._word2id = reverse(self._id2word)
+        self._word2id = reverse_mapping(self._id2word)
 
         if len(self._word2id) != len(self._id2word):
             self.logger.info("serious bug: words dumplicated, please check!")

@@ -58,16 +58,11 @@ def main():
     min_cluster_size = args.min_cluster_size
     min_samples = args.min_samples
     reduce_dimension = args.reduce_dimension
-    threshold = args.threshold
 
     # Mark results saving directories.
     save_dir = os.path.join(PROJECT_ROOT, "outputs")
-    base = os.path.join(PROJECT_ROOT, "datasets/" + dataset)
     output_model_dir = os.path.join(
         save_dir, "models/PLELog/" + dataset + "_" + parser + "/model"
-    )
-    output_res_dir = os.path.join(
-        save_dir, "results/PLELog/" + dataset + "_" + parser + "/detect_res"
     )
     prob_label_res_file = os.path.join(
         save_dir,
@@ -178,7 +173,6 @@ def main():
         optimizer = Optimizer(
             filter(lambda p: p.requires_grad, plelog.model.parameters())
         )
-        bestClassifier = None
         global_step = 0
         bestF = 0
         batch_num = int(np.ceil(len(labeled_train) / float(batch_size)))
@@ -191,7 +185,7 @@ def main():
                 % (epoch + 1, start, optimizer.lr)
             )
             batch_iter = 0
-            correct_num, total_num = 0, 0
+            _correct_num, _total_num = 0, 0
             # start batch
             for onebatch in data_iter(labeled_train, batch_size, True):
                 plelog.model.train()

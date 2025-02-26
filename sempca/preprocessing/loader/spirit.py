@@ -76,7 +76,6 @@ class SpiritLoader(BasicDataLoader):
     def _load_by_node_time_window(self, sequence_file, label_file):
         self.logger.info("Start loading Spirit log sequences.")
         nodes = OrderedDict()
-        summarized_lines = []
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
 
@@ -149,7 +148,6 @@ class SpiritLoader(BasicDataLoader):
 
     def _load_by_time_window(self, sequence_file, label_file):
         self.logger.info("Start loading Spirit log sequences.")
-        nodes = OrderedDict()
         summarized_lines = []
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
@@ -164,7 +162,6 @@ class SpiritLoader(BasicDataLoader):
                     continue
                 tokens = line.split()
                 prefix = tokens[0]
-                node = tokens[3]
                 datetime_str = tokens[2] + " " + tokens[6]
                 line = self._pre_process(line)
                 writer.write(line + "\n")
@@ -214,7 +211,6 @@ class SpiritLoader(BasicDataLoader):
 
     def _load_by_fixed_window(self, sequence_file, label_file):
         self.logger.info("Start loading Spirit log sequences.")
-        nodes = OrderedDict()
         summarized_lines = []
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
@@ -229,7 +225,6 @@ class SpiritLoader(BasicDataLoader):
                     continue
                 tokens = line.split()
                 prefix = tokens[0]
-                node = tokens[3]
                 datetime_str = tokens[2] + " " + tokens[6]
                 line = self._pre_process(line)
                 writer.write(line + "\n")
@@ -241,10 +236,6 @@ class SpiritLoader(BasicDataLoader):
         writer.close()
 
         # construct 1 minutes' seq
-        start_time = datetime.datetime.strptime(
-            "2005.01.01 00:00:00", "%Y.%m.%d %H:%M:%S"
-        )
-        end_time = start_time + datetime.timedelta(hours=1)
         block_id = 0
         key = "0"
         self.blocks.append(key)

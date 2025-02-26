@@ -58,7 +58,7 @@ def main():
     train_inputs = sequential_encoder.transform(train)
     test_inputs = sequential_encoder.transform(test)
 
-    model = PCAPlusPlus(n_components=n_components)
+    model = PCAPlusPlus(n_components=n_components, c_alpha=c_alpha)
     model.fit(train_inputs)
     model.evaluate(test_inputs, test_labels, fixed_threshold=anomaly_threshold)
 

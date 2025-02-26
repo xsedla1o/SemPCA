@@ -1,7 +1,6 @@
 import argparse
 import os
 import time
-from collections import Counter
 
 import torch
 from torch import nn
@@ -105,7 +104,7 @@ def evaluate(
             if not predicted:
                 inst.predicted = "Normal"
                 TN += normal_counter[inst.seq_hash]
-        FNCounter = Counter()
+
         for inst in tqdm(anomalies):
             predicted = False
             seq = inst.sequence + [-1] * (window_size + 1 - len(inst.sequence))
