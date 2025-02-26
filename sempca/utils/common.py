@@ -145,7 +145,6 @@ def generate_tinsts(batched_insts, vocab):
         for index in range(cur_slen):
             tinst.src_words[b, index] = vocab.word2id(inst.sequence[index])
             tinst.mask[b, index] = 1
-            pass
         b += 1
     return tinst
 
@@ -170,10 +169,8 @@ def generate_subseq_dual_tinsts(batched_insts, vocab, feature_extractor):
         for index in range(cur_slen):
             tinst.sequential[b, index] = vocab.word2id(inst.sequential[index])
             tinst.mask[b, index] = 1
-            pass
         for dim in range(inst.quantity.shape[0]):
             tinst.quantity[b, dim] = inst.quantity[dim]
-            pass
         b += 1
     return tinst
 
@@ -198,7 +195,6 @@ def generate_subseq_tinsts(batched_insts):
         for index in range(cur_slen):
             tinst.src_words[b, index, 0] = inst.sequential[index]
             tinst.mask[b, index] = 1
-            pass
         b += 1
     return tinst
 
@@ -349,7 +345,6 @@ def summarize_subsequences(instances, window_size, step_size=1):
             new_inst.belongs_to = inst.id
             new_instances.append(new_inst)
             i += step_size
-            pass
     return new_instances
 
 

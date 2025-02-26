@@ -236,7 +236,6 @@ class Solitary_HDBSCAN:
 
     def fit(self, inputs):
         self.model.fit(inputs)
-        pass
 
     def evaluate(self, inputs, ground_truth, normal_ids, label2id):
         all_predicted = [label2id[x] for x in self.predict(inputs, normal_ids)]
@@ -256,7 +255,6 @@ class Solitary_HDBSCAN:
             "Precision %.4f recall %.4f f-score %.4f " % (precision, recall, f)
         )
         return precision, recall, f
-        pass
 
     def min_dist(self, source, target):
         min_dist = float("inf")
@@ -314,7 +312,6 @@ class Solitary_HDBSCAN:
                     by_dist_anomalous += 1
                     predicted.append("Anomalous")
 
-                pass
             else:
                 by_normal_core_anomalous += 1
                 predicted.append("Anomalous")

@@ -484,8 +484,6 @@ class BGLLoader(BasicDataLoader):
                     logid, tempid = line.strip().split(",")
                     self.log2temp[int(logid)] = int(tempid)
 
-            pass
-
         else:
             for id, template in enumerate(templates):
                 self.templates[id] = template

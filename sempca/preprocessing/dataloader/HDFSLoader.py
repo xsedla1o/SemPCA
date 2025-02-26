@@ -25,7 +25,6 @@ class HDFSLoader(BasicDataLoader):
         self._load_raw_log_seqs()
         self._load_hdfs_labels()
         self.semantic_repr_func = semantic_repr_func
-        pass
 
     def parse_by_Official(self):
         self._restore()
@@ -82,7 +81,6 @@ class HDFSLoader(BasicDataLoader):
 
             with open(logseq_file, "r", encoding="utf-8") as reader:
                 self._load_log_event_seqs(reader)
-            pass
         else:
             self.logger.info("Parsing result not found, start a new one.")
             for id, template in enumerate(templates):
@@ -217,5 +215,3 @@ if __name__ == "__main__":
             PROJECT_ROOT, "datasets/temp_HDFS/persistences"
         ),
     )
-
-    pass

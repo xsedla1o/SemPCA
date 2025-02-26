@@ -26,7 +26,6 @@ from sempca.utils.common import (
 
 
 class AttLSTMModel(nn.Module):
-
     def __init__(self, vocab, lstm_layers, lstm_hiddens, dropout, device):
         self.logger = get_logger("AttLSTM")
         super(AttLSTMModel, self).__init__()
@@ -255,13 +254,11 @@ class LogAnomaly:
                     # If been recorded, won't change the result if current subsequence is normal.
                     if sub_inst.belongs_to not in block_classifications.keys():
                         block_classifications[sub_inst.belongs_to] = "Normal"
-                        pass
-                    pass
+
                 # Otherwise, the block contains this subsequence should be labeled as anomalous.
                 else:
                     block_classifications[sub_inst.belongs_to] = "Anomalous"
-                    pass
-                pass
+
             precision, recall, f1 = self.evaluate_metrics(
                 block_classifications, block_groundtruth
             )

@@ -34,7 +34,6 @@ class Instance:
                 + str(self.confidence)
                 + "\n"
             )
-        pass
 
     def __hash__(self):
         return hashlib.md5(str(self).encode("utf-8")).hexdigest()

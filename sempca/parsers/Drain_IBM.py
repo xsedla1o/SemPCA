@@ -102,7 +102,6 @@ class Drain3Parser:
                 self.parser = TemplateMiner(config=self.config, persistence_handler=fp)
                 self.parser.load_state()
                 self.logger.info("Loaded.")
-            pass
         else:
             self.logger.error(
                 "We are currently not supporting other types of persistence."
@@ -125,10 +124,6 @@ if __name__ == "__main__":
         # learn log events from raw log.
         log.info("Start training a new parser.")
         if not os.path.exists(input_file):
-            log.error(
-                "File %s not found. Please check the dataset folder" % input_file
-            )
+            log.error("File %s not found. Please check the dataset folder" % input_file)
             exit(1)
         parser.parse_file(in_file=input_file, remove_cols=remove_cols)
-
-    pass

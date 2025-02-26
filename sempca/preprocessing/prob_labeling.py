@@ -81,7 +81,6 @@ class Probabilistic_Labeling:
                     confidence = 0
                     new_instance.confidence = confidence
                     new_instance.predicted = predict
-                    pass
                 else:
                     # other clusters, instances should have confidence according to the outlier score.
                     confidence = 1 if np.isnan(outlier) else outlier
@@ -94,14 +93,12 @@ class Probabilistic_Labeling:
                     else:
                         FN += 1
                         FN_Counter[label] += 1
-                    pass
                 else:
                     if ground_truth[idx] == "Anomalous":
                         TP += 1
                     else:
                         FP += 1
                         FP_Counter[label] += 1
-                    pass
 
                 labeled_inst.append(new_instance)
                 idx += 1
@@ -169,7 +166,6 @@ class Probabilistic_Labeling:
                     confidence = 0
                     new_instance.confidence = confidence
                     new_instance.predicted = predict
-                    pass
                 else:
                     # other clusters, instances should have confidence according to the outlier score.
                     confidence = 1 if np.isnan(outlier) else outlier
@@ -182,14 +178,12 @@ class Probabilistic_Labeling:
                     else:
                         FN += 1
                         FN_Counter[label] += 1
-                    pass
                 else:
                     if ground_truth[idx] == "Anomalous":
                         TP += 1
                     else:
                         FP += 1
                         FP_Counter[label] += 1
-                    pass
 
                 labeled_inst.append(new_instance)
                 idx += 1

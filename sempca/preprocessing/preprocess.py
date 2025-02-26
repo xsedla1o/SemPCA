@@ -25,7 +25,6 @@ class Preprocessor:
         self.parsing = None
         self.tag2id = {"Normal": 0, "Anomalous": 1}
         self.id2tag = {0: "Normal", 1: "Anomalous"}
-        pass
 
     def process(self, dataset, parsing, template_encoding, cut_func):
         """
@@ -269,7 +268,6 @@ class Preprocessor:
                 self.test_event2idx[event] = self.train_event2idx[event]
         embed_size = len(pre_ordered_events)
         self.logger.info("Embed size: %d in pre+post dataset." % embed_size)
-        pass
 
     def _count_events(self, sequence):
         events = set()
@@ -292,4 +290,3 @@ if __name__ == "__main__":
         template_encoding=template_encoder.present,
         cut_func=cut_by_613,
     )
-    pass

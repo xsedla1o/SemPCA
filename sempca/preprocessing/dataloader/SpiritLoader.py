@@ -37,7 +37,6 @@ class SpiritLoader(BasicDataLoader):
             self.logger.error("File %s not found, please check." % self.in_file)
             raise FileNotFoundError
         self._load_raw_log_seqs()
-        pass
 
     def _pre_process(self, line):
         tokens = line.strip().split()
@@ -74,7 +73,6 @@ class SpiritLoader(BasicDataLoader):
         else:
             self._load_by_fixed_window(sequence_file, label_file)
             # self._load_by_time_window(sequence_file, label_file)
-            pass
 
     def _load_by_node_time_window(self, sequence_file, label_file):
         self.logger.info("Start loading Spirit log sequences.")
@@ -123,7 +121,6 @@ class SpiritLoader(BasicDataLoader):
                         self.block2seqs[key].append(line_num)
                         if prefix != "-":
                             self.block2label[key] = "Anomalous"
-                        pass
                     else:
                         block_id += 1
                         key = str(block_id)
@@ -193,7 +190,6 @@ class SpiritLoader(BasicDataLoader):
                 self.block2seqs[key].append(line_num)
                 if prefix != "-":
                     self.block2label[key] = "Anomalous"
-                pass
             else:
                 block_id += 1
                 key = str(block_id)
@@ -312,4 +308,3 @@ if __name__ == "__main__":
                 print("Processed %d lines" % total_lines)
     writer.close()
     print(total_lines, num_alerts)
-    pass

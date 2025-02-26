@@ -92,7 +92,6 @@ class BasicDataLoader:
         if self._check_parsing_persistences(log_template_mapping_file):
             self.load_parsing_results(log_template_mapping_file)
 
-            pass
         else:
             # parsing results not found, or somehow missing.
             self.logger.info(
@@ -126,7 +125,6 @@ class BasicDataLoader:
                 pool.close()
                 pool.join()
                 self.log2temp = dict(log2temp)
-                pass
             else:
                 for item in ori_lines:
                     self._sync_parsing(parser, item)
@@ -197,8 +195,6 @@ class BasicDataLoader:
             self.logger.warning(
                 "No template encoder. Please be NOTED that this may lead to duplicate full parsing process."
             )
-
-        pass
 
     def _check_parsing_persistences(self, log_template_mapping_file):
         flag = self._check_file_existence_and_contents(log_template_mapping_file)

@@ -1,5 +1,4 @@
 import argparse
-import os
 import time
 
 import torch.nn as nn
@@ -160,7 +159,7 @@ if __name__ == "__main__":
             loganomaly.logger.info("Training epoch %d finished." % epoch)
             torch.save(loganomaly.model.state_dict(), last_model_output)
         loganomaly.logger.info("Finish all training epochs.")
-        pass
+
     loganomaly.logger.info("=== Final Model ===")
     loganomaly.model.load_state_dict(torch.load(last_model_output, map_location=device))
     loganomaly.evaluate(test, feature_extractor, num_candidates)
