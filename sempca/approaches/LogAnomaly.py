@@ -1,6 +1,9 @@
 import argparse
+import os
 import time
 
+import numpy as np
+import torch
 import torch.nn as nn
 
 from sempca.CONSTANTS import PROJECT_ROOT, device
@@ -11,7 +14,12 @@ from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
 from sempca.representations.sequences.statistics import FeatureExtractor
 from sempca.representations.templates.statistics import Simple_template_TF_IDF
-from sempca.utils.common import *
+from sempca.utils import (
+    update_instances,
+    summarize_subsequences,
+    data_iter,
+    generate_subseq_dual_tinsts,
+)
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()

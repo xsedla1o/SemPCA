@@ -5,7 +5,7 @@ from collections import Counter
 import numpy as np
 
 from sempca.CONSTANTS import PROJECT_ROOT
-from sempca.utils.common import like_camel_to_tokens, tqdm, get_logger
+from sempca.utils import like_camel_to_tokens, tqdm, get_logger
 
 total_words = 0
 num_oov = 0

@@ -13,7 +13,7 @@ Reference:
 
 import numpy as np
 
-from sempca.utils.common import metrics, get_logger
+from sempca.utils import metrics, get_logger
 
 
 class PCA_PlusPlus(object):

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from sempca.utils.common import orthonormal_initializer
+from sempca.utils import orthonormal_initializer
 
 
 class NonLinear(nn.Module):

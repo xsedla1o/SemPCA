@@ -2,6 +2,8 @@ import argparse
 import os
 import time
 
+import numpy as np
+import torch
 import torch.nn as nn
 from sklearn.decomposition import FastICA
 
@@ -13,8 +15,7 @@ from sempca.preprocessing.preprocess import Preprocessor
 from sempca.preprocessing.prob_labeling import Probabilistic_Labeling
 from sempca.representations.sequences.statistics import Sequential_Add
 from sempca.representations.templates.statistics import Simple_template_TF_IDF
-from sempca.utils.common import *
-from sempca.utils.common import (
+from sempca.utils import (
     get_precision_recall,
     data_iter,
     generate_tinsts_binary_label,

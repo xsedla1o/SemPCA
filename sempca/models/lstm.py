@@ -12,7 +12,7 @@ from sempca.models.gru import AttGRUModel
 from sempca.module.Attention import LinearAttention
 from sempca.module.CPUEmbedding import CPUEmbedding
 from sempca.module.Common import NonLinear
-from sempca.utils.common import (
+from sempca.utils import (
     drop_input_independent,
     batch_variable_inst,
     generate_tinsts,

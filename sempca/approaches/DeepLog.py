@@ -11,8 +11,7 @@ from sempca.CONSTANTS import device, PROJECT_ROOT
 from sempca.models.lstm import DeepLog
 from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
-from sempca.utils import tqdm
-from sempca.utils.common import update_sequences, get_logger
+from sempca.utils import update_sequences, get_logger, tqdm
 
 # Dispose Loggers.
 DeepLogLogger = get_logger("DeepLog")
