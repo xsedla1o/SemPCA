@@ -37,7 +37,7 @@ if __name__ == "__main__":
         help="Max Distance parameter in LogClustering.",
     )
     argparser.add_argument(
-        "--anomaly_threshold",
+        "--threshold",
         type=float,
         default=None,
         help="Anomaly Threshold parameter in LogClustering.",
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     dataset = args.dataset
     parser = args.parser
     max_dist = args.max_dist
-    anomaly_threshold = args.anomaly_threshold
+    anomaly_threshold = args.threshold
     save_results = args.save_results
 
     # Training, Validating and Testing instances.
