@@ -415,7 +415,7 @@ def get_logger(name, file: Union[bool, str] = True):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+        f"{SESSION} - %(asctime)s - %(name)s - %(levelname)s: %(message)s"
     )
 
     # Log to file

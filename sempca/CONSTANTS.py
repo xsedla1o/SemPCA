@@ -1,4 +1,3 @@
-import hashlib
 import os
 import random
 import time
@@ -23,26 +22,21 @@ print("Seeding Finished")
 # Device configuration
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-SESSION = hashlib.md5(
-    time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time() + 8 * 60 * 60)).encode(
-        "utf-8"
-    )
-).hexdigest()
-SESSION = "SESSION_" + SESSION
+SESSION = time.strftime("%y%m%d_%H%M%S", time.gmtime(time.time()))
 
 
-def GET_PROJECT_ROOT():
+def get_project_root():
     # The constants file is located in the root of the project
     package_root = os.path.dirname(os.path.abspath(__file__))
     return os.path.dirname(package_root)
 
 
-def GET_LOGS_ROOT():
-    log_file_root = os.path.join(GET_PROJECT_ROOT(), "logs")
-    if not os.path.exists(log_file_root):
-        os.makedirs(log_file_root)
+def get_logs_root():
+    log_file_root = os.path.join(get_project_root(), "logs")
     return log_file_root
 
 
-LOG_ROOT = GET_LOGS_ROOT()
-PROJECT_ROOT = GET_PROJECT_ROOT()
+PROJECT_ROOT = get_project_root()
+
+LOG_ROOT = os.environ.get("SEMPCA_LOG_DIR", get_logs_root())
+os.makedirs(LOG_ROOT, exist_ok=True)
