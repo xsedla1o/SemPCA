@@ -8,7 +8,7 @@ import pandas as pd
 
 from sempca.CONSTANTS import PROJECT_ROOT
 from sempca.preprocessing.BasicLoader import BasicDataLoader
-from sempca.utils import tqdm, get_logger
+from sempca.utils import tqdm
 
 
 class BGLLoader(BasicDataLoader):
@@ -35,7 +35,6 @@ class BGLLoader(BasicDataLoader):
         dataset_base: dataset base path
         semantic_repr_func: semantic representation function
         """
-        self.logger = get_logger("BGLLoader")
         super(BGLLoader, self).__init__()
 
         assert isinstance(win_secs, int) or isinstance(win_lines, int), (

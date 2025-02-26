@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 from sempca.CONSTANTS import PROJECT_ROOT
 from sempca.preprocessing.BasicLoader import BasicDataLoader
-from sempca.utils import tqdm, get_logger
+from sempca.utils import tqdm
 
 
 class SpiritLoader(BasicDataLoader):
@@ -16,7 +16,6 @@ class SpiritLoader(BasicDataLoader):
         dataset_base=os.path.join(PROJECT_ROOT, "datasets/Spirit"),
         semantic_repr_func=None,
     ):
-        self.logger = get_logger("SpiritLoader")
         super(SpiritLoader, self).__init__()
         self.remove_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         self.regs = {

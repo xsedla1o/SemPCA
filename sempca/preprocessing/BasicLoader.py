@@ -1,11 +1,12 @@
 import abc
 import os
 import time
-import numpy as np
 from multiprocessing import Manager, Pool
 
+import numpy as np
+
 from sempca.parsers.Drain_IBM import Drain3Parser
-from sempca.utils.common import tqdm
+from sempca.utils import tqdm, get_logger
 
 
 def _async_parsing(parser, lines, log2temp):
@@ -19,6 +20,7 @@ def _async_parsing(parser, lines, log2temp):
 
 class BasicDataLoader:
     def __init__(self):
+        self.logger = get_logger(self.__class__.__name__)
         self.in_file = None
         self.block2emb = {}
         self.blocks = []

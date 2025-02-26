@@ -3,7 +3,7 @@ import re
 
 from sempca.CONSTANTS import PROJECT_ROOT
 from sempca.preprocessing.BasicLoader import BasicDataLoader
-from sempca.utils import tqdm, get_logger
+from sempca.utils import tqdm
 
 
 class HDFSLoader(BasicDataLoader):
@@ -13,7 +13,6 @@ class HDFSLoader(BasicDataLoader):
         datasets_base=os.path.join(PROJECT_ROOT, "datasets/HDFS"),
         semantic_repr_func=None,
     ):
-        self.logger = get_logger("HDFSLoader")
         super(HDFSLoader, self).__init__()
         self.blk_rex = re.compile(r"blk_[-]{0,1}[0-9]+")
         if not os.path.exists(in_file):
