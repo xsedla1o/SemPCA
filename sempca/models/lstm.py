@@ -9,9 +9,7 @@ from torch.nn.parameter import Parameter
 
 from sempca.CONSTANTS import device
 from sempca.models.gru import AttGRUModel
-from sempca.module.Attention import LinearAttention
-from sempca.module.CPUEmbedding import CPUEmbedding
-from sempca.module.Common import NonLinear
+from sempca.module import LinearAttention, CPUEmbedding, NonLinear
 from sempca.utils import (
     drop_input_independent,
     batch_variable_inst,
