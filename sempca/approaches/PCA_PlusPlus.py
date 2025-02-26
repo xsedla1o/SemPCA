@@ -3,8 +3,7 @@ import argparse
 from sempca.models.pca import PCA_PlusPlus
 from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
-from sempca.representations.sequences.statistics import Sequential_Add
-from sempca.representations.templates.statistics import Simple_template_TF_IDF
+from sempca.representations import Sequential_Add, Simple_template_TF_IDF
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()

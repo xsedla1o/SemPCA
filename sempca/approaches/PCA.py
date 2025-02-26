@@ -6,7 +6,7 @@ import numpy as np
 from sempca.models.pca import PCA
 from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
-from sempca.representations.sequences.statistics import FeatureExtractor
+from sempca.representations import FeatureExtractor
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()

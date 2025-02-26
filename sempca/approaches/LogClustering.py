@@ -7,7 +7,7 @@ import numpy as np
 from sempca.models.clustering import LogClustering
 from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
-from sempca.representations.sequences.statistics import FeatureExtractor
+from sempca.representations import FeatureExtractor
 
 
 def generate_inputs_and_labels(insts, label2idx):

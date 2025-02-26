@@ -6,7 +6,7 @@ import numpy as np
 
 from sempca.entities.instances import Instance
 from sempca.models.clustering import Solitary_HDBSCAN
-from sempca.representations.sequences.statistics import FeatureExtractor
+from sempca.representations import FeatureExtractor
 from sempca.utils import (
     get_precision_recall,
     generate_inputs_and_labels,

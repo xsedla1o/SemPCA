@@ -12,8 +12,7 @@ from sempca.module.Optimizer import Optimizer
 from sempca.module.Vocab import Vocab
 from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
-from sempca.representations.sequences.statistics import FeatureExtractor
-from sempca.representations.templates.statistics import Simple_template_TF_IDF
+from sempca.representations import FeatureExtractor, Simple_template_TF_IDF
 from sempca.utils import (
     update_instances,
     summarize_subsequences,

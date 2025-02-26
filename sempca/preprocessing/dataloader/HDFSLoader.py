@@ -200,7 +200,7 @@ class HDFSLoader(BasicDataLoader):
 
 
 if __name__ == "__main__":
-    from sempca.representations.templates.statistics import Simple_template_TF_IDF
+    from sempca.representations import Simple_template_TF_IDF
 
     semantic_encoder = Simple_template_TF_IDF()
     loader = HDFSLoader(

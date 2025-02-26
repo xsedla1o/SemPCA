@@ -279,7 +279,7 @@ class Preprocessor:
 
 
 if __name__ == "__main__":
-    from sempca.representations.templates.statistics import Simple_template_TF_IDF
+    from sempca.representations import Simple_template_TF_IDF
     from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 
     processor = Preprocessor()

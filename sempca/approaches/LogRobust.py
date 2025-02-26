@@ -12,7 +12,7 @@ from sempca.module.Optimizer import Optimizer
 from sempca.module.Vocab import Vocab
 from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
-from sempca.representations.templates.statistics import Simple_template_TF_IDF
+from sempca.representations import Simple_template_TF_IDF
 from sempca.utils import data_iter, generate_tinsts
 
 if __name__ == "__main__":
