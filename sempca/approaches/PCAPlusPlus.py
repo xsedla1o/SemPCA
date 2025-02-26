@@ -1,8 +1,8 @@
 import argparse
 
-from sempca.models import PCA_PlusPlus
+from sempca.models import PCAPlusPlus
 from sempca.preprocessing import Preprocessor, cut_by_613
-from sempca.representations import Sequential_Add, Simple_template_TF_IDF
+from sempca.representations import SequentialAdd, TemplateTfIdf
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     anomaly_threshold = args.threshold
     c_alpha = args.c_alpha
 
-    template_encoder = Simple_template_TF_IDF()
+    template_encoder = TemplateTfIdf()
 
     preprocessor = Preprocessor()
     train, _, test = preprocessor.process(
@@ -54,11 +54,11 @@ def main():
 
     test_labels = [int(preprocessor.label2id[inst.label]) for inst in test]
 
-    sequential_encoder = Sequential_Add(preprocessor.embedding)
+    sequential_encoder = SequentialAdd(preprocessor.embedding)
     train_inputs = sequential_encoder.transform(train)
     test_inputs = sequential_encoder.transform(test)
 
-    model = PCA_PlusPlus(n_components=n_components)
+    model = PCAPlusPlus(n_components=n_components)
     model.fit(train_inputs)
     model.evaluate(test_inputs, test_labels, fixed_threshold=anomaly_threshold)
 

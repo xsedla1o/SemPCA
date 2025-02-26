@@ -39,12 +39,12 @@ def metrics(y_pred, y_true):
     return precision, recall, f1
 
 
-def get_precision_recall(TP, TN, FP, FN):
-    if TP == 0:
+def get_precision_recall(tp, tn, fp, fn):
+    if tp == 0:
         return 0, 0, 0
     else:
-        precision = TP / (TP + FP)
-        recall = TP / (TP + FN)
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
         f = 2 * precision * recall / (precision + recall)
     return precision, recall, f
 

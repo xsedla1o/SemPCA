@@ -86,10 +86,10 @@ class AttLSTMModel(nn.Module):
         return outputs
 
 
-class Dual_LSTM(nn.Module):
+class DualLSTM(nn.Module):
     def __init__(self, vocab, lstm_hiddens, num_classes, dropout, device):
-        self.logger = get_logger("Dual_LSTM")
-        super(Dual_LSTM, self).__init__()
+        self.logger = get_logger("DualLSTM")
+        super(DualLSTM, self).__init__()
         self.dropout = dropout
         self.logger.info("==== Model Parameters ====")
         vocab_size, word_dims = vocab.vocab_size, vocab.word_dim
@@ -149,7 +149,7 @@ class LogAnomaly:
         self.test_batch_size = 1
         self.device = device
         self.num_classes = num_classes
-        self.model = Dual_LSTM(
+        self.model = DualLSTM(
             self.vocab, self.hidden_size, num_classes, 0.33, self.device
         )
         if self.device.type == "cuda":

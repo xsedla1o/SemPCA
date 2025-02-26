@@ -10,7 +10,7 @@ from sempca.CONSTANTS import PROJECT_ROOT, device
 from sempca.models import LogAnomaly
 from sempca.module import Optimizer, Vocab
 from sempca.preprocessing import Preprocessor, cut_by_613
-from sempca.representations import FeatureExtractor, Simple_template_TF_IDF
+from sempca.representations import FeatureExtractor, TemplateTfIdf
 from sempca.utils import (
     update_instances,
     summarize_subsequences,
@@ -66,7 +66,7 @@ def main():
     processor = Preprocessor()
 
     # Training, Validating and Testing instances.
-    template_encoder = Simple_template_TF_IDF()
+    template_encoder = TemplateTfIdf()
 
     train, dev, test = processor.process(
         dataset=dataset,

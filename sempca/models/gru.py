@@ -69,9 +69,9 @@ class AttGRUModel(nn.Module):
         return outputs  # , represents
 
 
-class AttGRUModel_onehot(nn.Module):
+class AttGRUModelOnehot(nn.Module):
     def __init__(self, embedding, lstm_layers, lstm_hiddens, dropout):
-        super(AttGRUModel_onehot, self).__init__()
+        super(AttGRUModelOnehot, self).__init__()
         # Dispose Loggers.
         self.logger = get_logger("AttGRU")
         self.dropout = dropout

@@ -14,11 +14,11 @@ from sempca.utils import (
 )
 
 
-class Probabilistic_Labeling:
+class ProbabilisticLabeling:
     def __init__(
         self, min_samples, min_clust_size, res_file=None, rand_state_file=None
     ):
-        self.logger = get_logger("Prob_Label")
+        self.logger = get_logger("ProbLabel")
 
         self.model = Solitary_HDBSCAN(
             min_cluster_size=min_clust_size, min_samples=min_samples

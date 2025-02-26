@@ -82,9 +82,7 @@ def main():
     )
     model.fit(X=train_inputs)
     predict_start = time.time()
-    _metrics = model.evaluate(
-        test_inputs, test_labels, threshold=anomaly_threshold
-    )
+    _metrics = model.evaluate(test_inputs, test_labels, threshold=anomaly_threshold)
     predict_end = time.time()
     model.logger.info("Prediction time: {}s", predict_end - predict_start)
 

@@ -11,9 +11,9 @@ total_words = 0
 num_oov = 0
 
 
-class Simple_template_TF_IDF:
+class TemplateTfIdf:
     def __init__(self):
-        self.logger = get_logger("Simple_template_TF_IDF")
+        self.logger = get_logger("TemplateTfIdf")
         self._word2vec = {}
         self.vocab_size = 0
         self.load_word2vec()

@@ -10,8 +10,8 @@ from sklearn.decomposition import FastICA
 from sempca.CONSTANTS import PROJECT_ROOT, device
 from sempca.models import PLELog
 from sempca.module import Optimizer
-from sempca.preprocessing import Preprocessor, cut_by_613, Probabilistic_Labeling
-from sempca.representations import Sequential_Add, Simple_template_TF_IDF
+from sempca.preprocessing import Preprocessor, cut_by_613, ProbabilisticLabeling
+from sempca.representations import SequentialAdd, TemplateTfIdf
 from sempca.utils import (
     get_precision_recall,
     data_iter,
@@ -87,7 +87,7 @@ def main():
 
     save_dir = os.path.join(PROJECT_ROOT, "outputs")
 
-    template_encoder = Simple_template_TF_IDF()
+    template_encoder = TemplateTfIdf()
 
     # Training, Validating and Testing instances.
     processor = Preprocessor()
@@ -99,7 +99,7 @@ def main():
     )
 
     # Log sequence representation.
-    sequential_encoder = Sequential_Add(processor.embedding)
+    sequential_encoder = SequentialAdd(processor.embedding)
     train_reprs = sequential_encoder.present(train)
     for index, inst in enumerate(train):
         inst.repr = train_reprs[index]
@@ -113,7 +113,7 @@ def main():
     # Sample normal instances.
     train_normal = [x for x, inst in enumerate(train) if inst.label == "Normal"]
     normal_ids = train_normal[: int(0.5 * len(train_normal))]
-    label_generator = Probabilistic_Labeling(
+    label_generator = ProbabilisticLabeling(
         min_samples=min_samples,
         min_clust_size=min_cluster_size,
         res_file=prob_label_res_file,

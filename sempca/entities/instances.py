@@ -62,7 +62,7 @@ class SubSequenceInstance:
         return self._hash_key
 
 
-class Log_With_Datetime:
+class LogWithDatetime:
     def __init__(self, idx, label, datetime, message):
         self.id = idx
         self.label = label
@@ -70,7 +70,7 @@ class Log_With_Datetime:
         self.message = message
 
 
-class Log_Time_Step:
+class LogTimeStep:
     def __init__(self, logs):
         self.logs = logs
         self.sequence = [log.id for log in self.logs]

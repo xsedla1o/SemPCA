@@ -277,11 +277,11 @@ class Preprocessor:
 
 
 if __name__ == "__main__":
-    from sempca.representations import Simple_template_TF_IDF
+    from sempca.representations import TemplateTfIdf
     from sempca.preprocessing import cut_by_613
 
     processor = Preprocessor()
-    template_encoder = Simple_template_TF_IDF()
+    template_encoder = TemplateTfIdf()
     processor.process(
         dataset="Spirit",
         parsing="IBM",

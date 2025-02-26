@@ -200,9 +200,9 @@ class HDFSLoader(BasicDataLoader):
 
 
 if __name__ == "__main__":
-    from sempca.representations import Simple_template_TF_IDF
+    from sempca.representations import TemplateTfIdf
 
-    semantic_encoder = Simple_template_TF_IDF()
+    semantic_encoder = TemplateTfIdf()
     loader = HDFSLoader(
         in_file=os.path.join(PROJECT_ROOT, "datasets/temp_HDFS/HDFS.log"),
         datasets_base=os.path.join(PROJECT_ROOT, "datasets/temp_HDFS"),

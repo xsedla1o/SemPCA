@@ -10,7 +10,7 @@ from sempca.CONSTANTS import PROJECT_ROOT, device
 from sempca.models import LogRobust
 from sempca.module import Optimizer, Vocab
 from sempca.preprocessing import cut_by_613, Preprocessor
-from sempca.representations import Simple_template_TF_IDF
+from sempca.representations import TemplateTfIdf
 from sempca.utils import data_iter, generate_tinsts
 
 
@@ -61,7 +61,7 @@ def main():
 
     # Prepare Training, Validating and Testing instances.
     processor = Preprocessor()
-    template_encoder = Simple_template_TF_IDF()
+    template_encoder = TemplateTfIdf()
     train, dev, test = processor.process(
         dataset=dataset,
         parsing=parser,

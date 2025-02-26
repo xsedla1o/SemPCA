@@ -7,10 +7,10 @@ from scipy.special import expit
 from sempca.utils import get_logger
 
 
-class Sequential_Add:
+class SequentialAdd:
     def __init__(self, id2embed):
         assert isinstance(id2embed, dict)
-        self.logger = get_logger("Sequential_Add", "StaticLogger.log")
+        self.logger = get_logger("SequentialAdd", "StaticLogger.log")
         self.vocab_size = len(id2embed)
         self.word_dim = id2embed[1].shape
         self.id2embed = id2embed

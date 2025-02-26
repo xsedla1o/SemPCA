@@ -16,9 +16,9 @@ import numpy as np
 from sempca.utils import metrics, get_logger
 
 
-class PCA_PlusPlus(object):
+class PCAPlusPlus(object):
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
-        self.logger = get_logger("PCA_PlusPlus")
+        self.logger = get_logger("PCAPlusPlus")
 
         self.proj_C = None
         self.components = None
