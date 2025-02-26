@@ -1,2 +1,2 @@
 cd ../..
-python -u ./approaches/LogAnomaly.py --dataset Sprit --mode test --num_candidates 341
+python -u ./sempca/approaches/LogAnomaly.py --dataset Sprit --mode test --num_candidates 341

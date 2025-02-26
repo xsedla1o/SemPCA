@@ -1,2 +1,2 @@
 cd ../..
-python -u ./approaches/LogAnomaly.py --dataset BGL --mode test --num_candidates 1
+python -u ./sempca/approaches/LogAnomaly.py --dataset BGL --mode test --num_candidates 1

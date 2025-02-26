@@ -1,2 +1,2 @@
 cd ../..
-python -u ./approaches/LogRobust.py --dataset BGL --mode test
+python -u ./sempca/approaches/LogRobust.py --dataset BGL --mode test

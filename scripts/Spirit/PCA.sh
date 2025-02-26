@@ -1,2 +1,2 @@
 cd ../..
-python -u ./approaches/PCA.py --dataset Spirit --n_components 50 --threshold 5025.0980
+python -u ./sempca/approaches/PCA.py --dataset Spirit --n_components 50 --threshold 5025.0980
