@@ -13,6 +13,15 @@ authors = [
     { name = "Ondrej Sedlacek", email = "xsedla1o@stud.fit.vutbr.cz" }
 ]
 
+[project.scripts]
+sempca-loganomaly = "sempca.approaches.LogAnomaly:main"
+sempca-deeplog = "sempca.approaches.DeepLog:main"
+sempca-logcluster = "sempca.approaches.LogClustering:main"
+sempca-logrobust = "sempca.approaches.LogRobust:main"
+sempca-pca = "sempca.approaches.PCA:main"
+sempca-pca-plus-plus = "sempca.approaches.PCAPlusPlus:main"
+sempca-ple-log = "sempca.approaches.PLELog:main"
+
 [tool.setuptools.packages.find]
 include = ["sempca*"]
 

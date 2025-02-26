@@ -18,7 +18,8 @@ from sempca.utils import (
     generate_subseq_dual_tinsts,
 )
 
-if __name__ == "__main__":
+
+def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--dataset", default="HDFS", type=str, help="Target dataset. Default HDFS"
@@ -168,3 +169,7 @@ if __name__ == "__main__":
     loganomaly.logger.info("=== Final Model ===")
     loganomaly.model.load_state_dict(torch.load(last_model_output, map_location=device))
     loganomaly.evaluate(test, feature_extractor, num_candidates)
+
+
+if __name__ == "__main__":
+    main()

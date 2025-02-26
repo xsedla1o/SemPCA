@@ -7,7 +7,8 @@ from sempca.models import PCA
 from sempca.preprocessing import cut_by_613, Preprocessor
 from sempca.representations import FeatureExtractor
 
-if __name__ == "__main__":
+
+def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--dataset", default="HDFS", type=str, help="Target dataset. Default HDFS"
@@ -67,8 +68,13 @@ if __name__ == "__main__":
     train_end = time.time()
     model.logger.info("Training time: %.2f" % (train_end - train_start))
     test_start = time.time()
-    test_predicted = model.evaluate(
+    _metrics = model.evaluate(
         test_inputs, test_labels, fixed_threshold=anomaly_threshold
     )
+    time_end = time.time()
 
-    model.logger.info("All is done.")
+    model.logger.info("Prediction time: {:2f}s", time_end - test_start)
+
+
+if __name__ == "__main__":
+    main()

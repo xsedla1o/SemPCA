@@ -19,10 +19,10 @@ def generate_inputs_and_labels(insts, label2idx):
     return inputs, labels
 
 
-if __name__ == "__main__":
+def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        "--dataset", default="Spirit", type=str, help="Target dataset. Default HDFS"
+        "--dataset", default="HDFS", type=str, help="Target dataset. Default HDFS"
     )
     argparser.add_argument(
         "--parser",
@@ -82,7 +82,12 @@ if __name__ == "__main__":
     )
     model.fit(X=train_inputs)
     predict_start = time.time()
-    test_predicted = model.evaluate(
+    _metrics = model.evaluate(
         test_inputs, test_labels, threshold=anomaly_threshold
     )
     predict_end = time.time()
+    model.logger.info("Prediction time: {}s", predict_end - predict_start)
+
+
+if __name__ == "__main__":
+    main()

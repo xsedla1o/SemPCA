@@ -47,7 +47,9 @@ def generate_inputs_by_instances(instances, window, step=1):
     return dataset
 
 
-def evaluate(model, instances, num_candidates, out_file=None):
+def evaluate(
+    model, instances, num_candidates, out_file=None, window_size=10, input_size=1
+):
     """
     Evaluate the effectiveness of model on instances. Return P, R and F-score.
     :param model: Trained model.
@@ -149,7 +151,7 @@ def evaluate(model, instances, num_candidates, out_file=None):
     return P, R, F1
 
 
-if __name__ == "__main__":
+def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--dataset", default="HDFS", type=str, help="Target dataset. Default HDFS"
@@ -272,6 +274,8 @@ if __name__ == "__main__":
             test,
             num_candidates,
             os.path.join(output_res_dir, "output_last.txt"),
+            window_size,
+            input_size,
         )
         if os.path.exists(best_model_output):
             DeepLogLogger.info("Test by best dev's model")
@@ -283,7 +287,13 @@ if __name__ == "__main__":
                 test,
                 num_candidates,
                 os.path.join(output_res_dir, "output_best.txt"),
+                window_size,
+                input_size,
             )
     else:
         DeepLogLogger.error("Mode %s is not supported yet." % mode)
         raise NotImplementedError
+
+
+if __name__ == "__main__":
+    main()

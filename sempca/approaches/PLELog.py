@@ -25,7 +25,7 @@ batch_size = 100
 epochs = 5
 
 
-if __name__ == "__main__":
+def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--dataset", default="HDFS", type=str, help="Target dataset. Default HDFS"
@@ -261,3 +261,7 @@ if __name__ == "__main__":
         "Best results are p %.6f r %.6f f %.6f, by the threshold of %.2f"
         % (bestP, bestR, bestF, best_thre)
     )
+
+
+if __name__ == "__main__":
+    main()

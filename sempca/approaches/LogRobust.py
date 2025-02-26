@@ -13,7 +13,8 @@ from sempca.preprocessing import cut_by_613, Preprocessor
 from sempca.representations import Simple_template_TF_IDF
 from sempca.utils import data_iter, generate_tinsts
 
-if __name__ == "__main__":
+
+def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--dataset", default="HDFS", type=str, help="Target dataset. Default HDFS"
@@ -143,3 +144,7 @@ if __name__ == "__main__":
         logrobust.logger.info("=== Best Model ===")
         logrobust.model.load_state_dict(torch.load(best_model_output))
         logrobust.evaluate(test)
+
+
+if __name__ == "__main__":
+    main()

@@ -4,7 +4,8 @@ from sempca.models import PCA_PlusPlus
 from sempca.preprocessing import Preprocessor, cut_by_613
 from sempca.representations import Sequential_Add, Simple_template_TF_IDF
 
-if __name__ == "__main__":
+
+def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--dataset", default="HDFS", type=str, help="Target dataset. Default HDFS"
@@ -62,3 +63,7 @@ if __name__ == "__main__":
     model.evaluate(test_inputs, test_labels, fixed_threshold=anomaly_threshold)
 
     model.logger.info("All done.")
+
+
+if __name__ == "__main__":
+    main()
