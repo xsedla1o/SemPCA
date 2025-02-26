@@ -4,7 +4,7 @@ from collections import Counter
 
 import numpy as np
 
-from sempca.CONSTANTS import PROJECT_ROOT
+from sempca.const import PROJECT_ROOT
 from sempca.utils import like_camel_to_tokens, tqdm, get_logger
 
 total_words = 0

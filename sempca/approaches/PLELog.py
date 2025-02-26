@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from sklearn.decomposition import FastICA
 
-from sempca.CONSTANTS import PROJECT_ROOT, device
+from sempca.const import PROJECT_ROOT, device
 from sempca.models import PLELog
 from sempca.module import Optimizer
 from sempca.preprocessing import Preprocessor, cut_by_613, ProbabilisticLabeling

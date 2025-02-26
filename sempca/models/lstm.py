@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 
-from sempca.CONSTANTS import device
+from sempca.const import device
 from sempca.models.gru import AttGRUModel
 from sempca.module import LinearAttention, CPUEmbedding, NonLinear
 from sempca.utils import (

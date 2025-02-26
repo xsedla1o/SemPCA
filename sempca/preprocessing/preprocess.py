@@ -2,7 +2,7 @@ import gc
 import os
 from collections import Counter
 
-from sempca.CONSTANTS import PROJECT_ROOT
+from sempca.const import PROJECT_ROOT
 from sempca.entities.instances import Instance
 from sempca.preprocessing import BGLLoader, HDFSLoader, SpiritLoader
 from sempca.utils import tqdm, get_logger

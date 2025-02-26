@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import Parameter
 
-from sempca.CONSTANTS import device
+from sempca.const import device
 from sempca.module import LinearAttention, CPUEmbedding, NonLinear
 from sempca.utils import drop_input_independent, get_logger
 

@@ -6,7 +6,7 @@ from typing import Tuple, List, Dict
 import numpy as np
 import pandas as pd
 
-from sempca.CONSTANTS import PROJECT_ROOT
+from sempca.const import PROJECT_ROOT
 from sempca.preprocessing.loader import BasicDataLoader
 from sempca.utils import tqdm
 

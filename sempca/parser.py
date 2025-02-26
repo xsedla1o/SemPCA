@@ -5,7 +5,7 @@ from drain3 import TemplateMiner
 from drain3.file_persistence import FilePersistence
 from drain3.template_miner_config import TemplateMinerConfig
 
-from sempca.CONSTANTS import PROJECT_ROOT
+from sempca.const import PROJECT_ROOT
 from sempca.utils import tqdm, get_logger
 
 

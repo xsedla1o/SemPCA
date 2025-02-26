@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from sempca.CONSTANTS import PROJECT_ROOT, device
+from sempca.const import PROJECT_ROOT, device
 from sempca.models import LogAnomaly
 from sempca.module import Optimizer, Vocab
 from sempca.preprocessing import Preprocessor, cut_by_613

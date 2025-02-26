@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 
-from sempca.CONSTANTS import seed
+from sempca.const import seed
 
 
 def cut_by_82_with_shuffle(instances):

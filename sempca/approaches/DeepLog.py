@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 
-from sempca.CONSTANTS import device, PROJECT_ROOT
+from sempca.const import device, PROJECT_ROOT
 from sempca.models import DeepLog
 from sempca.preprocessing import Preprocessor, cut_by_613
 from sempca.utils import update_sequences, get_logger, tqdm

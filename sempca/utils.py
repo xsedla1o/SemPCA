@@ -9,7 +9,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from torch.autograd import Variable
 from tqdm import tqdm as tqdm_original
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT
+from sempca.const import SESSION, LOG_ROOT
 from sempca.entities import (
     TInstWithLogits,
     TensorInstance,
