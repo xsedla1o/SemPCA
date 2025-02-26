@@ -5,7 +5,7 @@ from multiprocessing import Manager, Pool
 
 import numpy as np
 
-from sempca.parsers.Drain_IBM import Drain3Parser
+from sempca.parser import Drain3Parser
 from sempca.utils import tqdm, get_logger
 
 
