@@ -4,9 +4,7 @@ from collections import Counter
 
 from sempca.CONSTANTS import PROJECT_ROOT
 from sempca.entities.instances import Instance
-from sempca.preprocessing.dataloader.BGLLoader import BGLLoader
-from sempca.preprocessing.dataloader.HDFSLoader import HDFSLoader
-from sempca.preprocessing.dataloader.SpiritLoader import SpiritLoader
+from sempca.preprocessing import BGLLoader, HDFSLoader, SpiritLoader
 from sempca.utils import tqdm, get_logger
 
 
@@ -280,7 +278,7 @@ class Preprocessor:
 
 if __name__ == "__main__":
     from sempca.representations import Simple_template_TF_IDF
-    from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
+    from sempca.preprocessing import cut_by_613
 
     processor = Preprocessor()
     template_encoder = Simple_template_TF_IDF()

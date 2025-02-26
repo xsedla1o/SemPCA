@@ -4,7 +4,7 @@ import re
 from collections import OrderedDict
 
 from sempca.CONSTANTS import PROJECT_ROOT
-from sempca.preprocessing.BasicLoader import BasicDataLoader
+from sempca.preprocessing.loader import BasicDataLoader
 from sempca.utils import tqdm
 
 

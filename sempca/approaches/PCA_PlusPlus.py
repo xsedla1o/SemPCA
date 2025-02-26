@@ -1,8 +1,7 @@
 import argparse
 
 from sempca.models.pca import PCA_PlusPlus
-from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
-from sempca.preprocessing.preprocess import Preprocessor
+from sempca.preprocessing import Preprocessor, cut_by_613
 from sempca.representations import Sequential_Add, Simple_template_TF_IDF
 
 if __name__ == "__main__":

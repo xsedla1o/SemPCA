@@ -10,9 +10,7 @@ from sklearn.decomposition import FastICA
 from sempca.CONSTANTS import PROJECT_ROOT, device
 from sempca.models.lstm import PLELog
 from sempca.module.Optimizer import Optimizer
-from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
-from sempca.preprocessing.preprocess import Preprocessor
-from sempca.preprocessing.prob_labeling import Probabilistic_Labeling
+from sempca.preprocessing import Preprocessor, cut_by_613, Probabilistic_Labeling
 from sempca.representations import Sequential_Add, Simple_template_TF_IDF
 from sempca.utils import (
     get_precision_recall,

@@ -5,8 +5,7 @@ import time
 import numpy as np
 
 from sempca.models.clustering import LogClustering
-from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
-from sempca.preprocessing.preprocess import Preprocessor
+from sempca.preprocessing import Preprocessor, cut_by_613
 from sempca.representations import FeatureExtractor
 
 
