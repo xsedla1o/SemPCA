@@ -11,42 +11,14 @@ Reference:
 
 """
 
-import logging
-import os
-import sys
-
 import numpy as np
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT
-from sempca.utils.common import metrics
+from sempca.utils.common import metrics, get_logger
 
 
 class PCA_PlusPlus(object):
     # Dispose Loggers.
-    _logger = logging.getLogger("PCA_PlusPlus")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "PCA_PlusPlus.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct logger for PCA_PlusPlus succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("PCA_PlusPlus")
 
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
         self.proj_C = None
@@ -153,30 +125,7 @@ class PCA_PlusPlus(object):
 
 class PCA(object):
     # Dispose Loggers.
-    _logger = logging.getLogger("PCA")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "PCA.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct logger for PCA succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("PCA")
 
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
         """The PCA model for anomaly detection

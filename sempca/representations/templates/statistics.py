@@ -1,13 +1,11 @@
-import logging
 import os
 import re
-import sys
 from collections import Counter
 
 import numpy as np
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT, PROJECT_ROOT
-from sempca.utils.common import like_camel_to_tokens, tqdm
+from sempca.CONSTANTS import PROJECT_ROOT
+from sempca.utils.common import like_camel_to_tokens, tqdm, get_logger
 
 total_words = 0
 num_oov = 0
@@ -15,32 +13,7 @@ num_oov = 0
 
 class Simple_template_TF_IDF:
     # Dispose Loggers.
-    _logger = logging.getLogger("Simple_template_TF_IDF")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(
-        os.path.join(LOG_ROOT, "Simple_template_TF_IDF.log")
-    )
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct Simple_template_TF_IDF Encoder success, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("Simple_template_TF_IDF")
 
     @property
     def logger(self):

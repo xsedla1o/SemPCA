@@ -1,43 +1,18 @@
 import gc
-import logging
 import os
-import sys
 from collections import Counter
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT, PROJECT_ROOT
+from sempca.CONSTANTS import PROJECT_ROOT
 from sempca.entities.instances import Instance
 from sempca.preprocessing.dataloader.BGLLoader import BGLLoader
 from sempca.preprocessing.dataloader.HDFSLoader import HDFSLoader
 from sempca.preprocessing.dataloader.SpiritLoader import SpiritLoader
-from sempca.utils import tqdm
+from sempca.utils import tqdm, get_logger
 
 
 class Preprocessor:
     # Dispose Loggers.
-    _logger = logging.getLogger("Preprocessor")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "Preprocessor.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct Preprocessor logger success, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("Preprocessor")
 
     @property
     def logger(self):

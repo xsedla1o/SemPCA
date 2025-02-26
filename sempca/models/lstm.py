@@ -1,7 +1,4 @@
-import logging
 import math
-import os
-import sys
 import time
 
 import numpy as np
@@ -10,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT, device
+from sempca.CONSTANTS import device
 from sempca.models.gru import AttGRUModel
 from sempca.module.Attention import LinearAttention
 from sempca.module.CPUEmbedding import CPUEmbedding
@@ -24,35 +21,13 @@ from sempca.utils.common import (
     generate_subseq_dual_tinsts,
     data_iter,
     tqdm,
+    get_logger,
 )
 
 
 class AttLSTMModel(nn.Module):
     # Dispose Loggers.
-    _logger = logging.getLogger("AttLSTM")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "AttLSTM.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct logger for Attention-Based LSTM succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("AttLSTM")
 
     @property
     def logger(self):
@@ -121,30 +96,7 @@ class AttLSTMModel(nn.Module):
 
 class Dual_LSTM(nn.Module):
     # Dispose Loggers.
-    _logger = logging.getLogger("Dual_LSTM")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "Dual_LSTM.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct logger for Duality LSTM succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("Dual_LSTM")
 
     @property
     def logger(self):
@@ -203,30 +155,7 @@ class Dual_LSTM(nn.Module):
 
 class LogAnomaly:
     # Dispose Loggers.
-    _logger = logging.getLogger("LogAnomaly")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "LogAnomaly.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct logger for LogAnomaly succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("LogAnomaly")
 
     @property
     def logger(self):
@@ -410,23 +339,7 @@ class LogAnomaly:
 
 # class DeepLog():
 #     # Dispose Loggers.
-#     _logger = logging.getLogger('DeepLog')
-#     _logger.setLevel(logging.DEBUG)
-#     console_handler = logging.StreamHandler(sys.stderr)
-#     console_handler.setLevel(logging.DEBUG)
-#     console_handler.setFormatter(
-#         logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
-#
-#     file_handler = logging.FileHandler(os.path.join(LOG_ROOT, 'DeepLog.log'))
-#     file_handler.setLevel(logging.INFO)
-#     file_handler.setFormatter(
-#         logging.Formatter("%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"))
-#
-#     _logger.addHandler(console_handler)
-#     _logger.addHandler(file_handler)
-#     _logger.info(
-#         'Construct logger for DeepLog succeeded, current working directory: %s, logs will be written in %s' %
-#         (os.getcwd(), LOG_ROOT))
+#     _logger = get_logger("DeepLog")
 #
 #     @property
 #     def logger(self):
@@ -678,30 +591,7 @@ class DeepLog(nn.Module):
 
 class LogRobust:
     # Dispose Loggers.
-    _logger = logging.getLogger("LogRobust")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "LogRobust.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct logger for LogRobust succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("LogRobust")
 
     @property
     def logger(self):
@@ -786,7 +676,7 @@ class PLELog:
         self.label2id = label2id
         self.tag2id = {"Normal": 0, "Anomalous": 1}
         self.id2tag = {0: "Normal", 1: "Anomalous"}
-        self.logger = self.create_logger()
+        self.logger = get_logger("PLELog")
         self.embedding = embedding
         self.num_layer = num_layer
         self.hidden_size = hidden_size
@@ -798,32 +688,6 @@ class PLELog:
         if torch.cuda.is_available():
             self.model = self.model.cuda(device)
         self.loss = nn.BCELoss()
-
-    def create_logger(self):
-        # Dispose Loggers.
-        PLELogLogger = logging.getLogger("PLELog")
-        PLELogLogger.setLevel(logging.DEBUG)
-        console_handler = logging.StreamHandler(sys.stderr)
-        console_handler.setLevel(logging.DEBUG)
-        console_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-            )
-        )
-        file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "PLELog.log"))
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-            )
-        )
-        PLELogLogger.addHandler(console_handler)
-        PLELogLogger.addHandler(file_handler)
-        PLELogLogger.info(
-            "Construct logger for PLELog succeeded, current working directory: %s, logs will be written in %s"
-            % (os.getcwd(), LOG_ROOT)
-        )
-        return PLELogLogger
 
     def forward(self, inputs, targets):
         tag_logits = self.model(inputs)

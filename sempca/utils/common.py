@@ -1,4 +1,7 @@
+import logging
+import os.path
 import sys
+from typing import Union
 
 import numpy as np
 import torch
@@ -6,6 +9,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from torch.autograd import Variable
 from tqdm import tqdm as tqdm_original
 
+from sempca.CONSTANTS import SESSION, LOG_ROOT
 from sempca.entities import (
     TInstWithLogits,
     TensorInstance,
@@ -398,3 +402,45 @@ def tqdm(
             **kwargs,
         )
     return iterable
+
+
+def get_logger(name, file: Union[bool, str] = True):
+    """
+    Get logger for the module.
+
+    Parameters
+    ----------
+    name: str, the name of the logger / component
+    file: bool, whether to log to file or not; if str, the name of the file
+
+    Returns
+    -------
+    logger: logging.Logger
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
+    )
+
+    # Log to file
+    if file:
+        if isinstance(file, bool):
+            file = f"{name}.log"
+        else:
+            assert isinstance(file, str), "file must be a string or boolean"
+            if not file.endswith(".log"):
+                file += ".log"
+
+        fh = logging.FileHandler(os.path.join(LOG_ROOT, file))
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    # Log to console
+    ch = logging.StreamHandler(sys.stderr)
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    return logger

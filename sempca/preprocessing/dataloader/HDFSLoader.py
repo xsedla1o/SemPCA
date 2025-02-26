@@ -1,40 +1,14 @@
-import logging
-import re
-import sys
-
-from sempca.CONSTANTS import SESSION, LOG_ROOT, PROJECT_ROOT
-from sempca.preprocessing.BasicLoader import BasicDataLoader
 import os.path
+import re
 
-from sempca.utils import tqdm
+from sempca.CONSTANTS import PROJECT_ROOT
+from sempca.preprocessing.BasicLoader import BasicDataLoader
+from sempca.utils import tqdm, get_logger
 
 
 class HDFSLoader(BasicDataLoader):
     # Dispose Loggers.
-    _logger = logging.getLogger("HDFSLoader")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "HDFSLoader.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct self.logger success, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("HDFSLoader")
 
     @property
     def logger(self):

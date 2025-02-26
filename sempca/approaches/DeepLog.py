@@ -1,7 +1,5 @@
 import argparse
-import logging
 import os
-import sys
 import time
 from collections import Counter
 
@@ -9,38 +7,15 @@ import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT, device, PROJECT_ROOT
+from sempca.CONSTANTS import device, PROJECT_ROOT
 from sempca.models.lstm import DeepLog
 from sempca.preprocessing.datacutter.SimpleCutting import cut_by_613
 from sempca.preprocessing.preprocess import Preprocessor
 from sempca.utils import tqdm
-from sempca.utils.common import update_sequences
+from sempca.utils.common import update_sequences, get_logger
 
 # Dispose Loggers.
-DeepLogLogger = logging.getLogger("DeepLog")
-DeepLogLogger.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler(sys.stderr)
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-    )
-)
-
-file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "DeepLog.log"))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-    )
-)
-
-DeepLogLogger.addHandler(console_handler)
-DeepLogLogger.addHandler(file_handler)
-DeepLogLogger.info(
-    "Construct logger for DeepLog succeeded, current working directory: %s, logs will be written in %s"
-    % (os.getcwd(), LOG_ROOT)
-)
+DeepLogLogger = get_logger("DeepLog")
 
 
 def generate_inputs_by_instances(instances, window, step=1):

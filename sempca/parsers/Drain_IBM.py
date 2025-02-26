@@ -1,40 +1,15 @@
-import logging
 import os
 import re
-import sys
 
 from drain3 import TemplateMiner
 from drain3.file_persistence import FilePersistence
 from drain3.template_miner_config import TemplateMinerConfig
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT, PROJECT_ROOT
-from sempca.utils import tqdm
+from sempca.CONSTANTS import PROJECT_ROOT
+from sempca.utils import tqdm, get_logger
 
 # Dispose Loggers.
-DrainLogger = logging.getLogger("drain")
-DrainLogger.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler(sys.stderr)
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-    )
-)
-
-file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "drain.log"))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-    )
-)
-
-DrainLogger.addHandler(console_handler)
-DrainLogger.addHandler(file_handler)
-DrainLogger.info(
-    "Construct DrainLogger success, current working directory: %s, logs will be written in %s"
-    % (os.getcwd(), LOG_ROOT)
-)
+DrainLogger = get_logger("drain")
 
 
 class Drain3Parser:

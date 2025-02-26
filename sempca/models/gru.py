@@ -1,40 +1,13 @@
-import logging
-import os
-import sys
-
-from sempca.CONSTANTS import SESSION, LOG_ROOT, device
+from sempca.CONSTANTS import device
 from sempca.module.Attention import *
 from sempca.module.CPUEmbedding import *
 from sempca.module.Common import *
-from sempca.utils import drop_input_independent
+from sempca.utils import drop_input_independent, get_logger
 
 
 class AttGRUModel(nn.Module):
     # Dispose Loggers.
-    AttGRULogger = logging.getLogger("AttGRU")
-    AttGRULogger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "AttGRU.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    AttGRULogger.addHandler(console_handler)
-    AttGRULogger.addHandler(file_handler)
-    AttGRULogger.info(
-        "Construct logger for Attention-Based GRU succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    AttGRULogger = get_logger("AttGRU")
 
     def __init__(self, embedding, lstm_layers, lstm_hiddens, dropout):
         super(AttGRUModel, self).__init__()
@@ -101,31 +74,7 @@ class AttGRUModel_onehot(nn.Module):
     def __init__(self, embedding, lstm_layers, lstm_hiddens, dropout):
         super(AttGRUModel_onehot, self).__init__()
         # Dispose Loggers.
-        AttGRULogger = logging.getLogger("AttGRU")
-        AttGRULogger.setLevel(logging.DEBUG)
-        console_handler = logging.StreamHandler(sys.stderr)
-        console_handler.setLevel(logging.DEBUG)
-        console_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-            )
-        )
-
-        file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "AttGRU.log"))
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-            )
-        )
-
-        AttGRULogger.addHandler(console_handler)
-        AttGRULogger.addHandler(file_handler)
-        AttGRULogger.info(
-            "Construct logger for Attention-Based GRU succeeded, current working directory: %s, logs will be written in %s"
-            % (os.getcwd(), LOG_ROOT)
-        )
-        self.logger = AttGRULogger
+        self.logger = get_logger("AttGRU")
         self.dropout = dropout
         self.logger.info("==== Model Parameters ====")
         self.logger.info("Input Dimension: %d" % 1)

@@ -1,43 +1,21 @@
-import logging
 import os
 import pickle
-import sys
 from collections import Counter
 
 import numpy as np
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT
-from sempca.models.clustering import Solitary_HDBSCAN
 from sempca.entities.instances import Instance
+from sempca.models.clustering import Solitary_HDBSCAN
 from sempca.representations.sequences.statistics import FeatureExtractor
-from sempca.utils.common import get_precision_recall, generate_inputs_and_labels
+from sempca.utils.common import (
+    get_precision_recall,
+    generate_inputs_and_labels,
+    get_logger,
+)
 
 
 class Probabilistic_Labeling:
-    _logger = logging.getLogger("Prob_Label")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "Prob_Label.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct logger for Probabilistic labeling succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("Prob_Label")
 
     @property
     def logger(self):

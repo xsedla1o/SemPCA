@@ -1,41 +1,15 @@
-import logging
-import os
-import sys
 from collections import Counter
 
 import numpy as np
 import pandas as pd
 from scipy.special import expit
 
-from sempca.CONSTANTS import SESSION, LOG_ROOT
+from sempca.utils import get_logger
 
 
 class Sequential_Add:
     # Dispose Loggers.
-    _logger = logging.getLogger("StatisticsRepresentation.")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "StaticLogger.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct StatisticsLogger success, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("Sequential_Add", "StaticLogger.log")
 
     @property
     def logger(self):
@@ -77,30 +51,7 @@ class Sequential_Add:
 
 class FeatureExtractor(object):
     # Dispose Loggers.
-    _logger = logging.getLogger("FeatureExtractor")
-    _logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "StaticLogger.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    _logger.addHandler(console_handler)
-    _logger.addHandler(file_handler)
-    _logger.info(
-        "Construct FeatureExtractor success, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    _logger = get_logger("FeatureExtractor", "StaticLogger.log")
 
     @property
     def logger(self):

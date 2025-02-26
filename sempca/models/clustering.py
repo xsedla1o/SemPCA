@@ -1,16 +1,13 @@
-import sys
-
-sys.path.extend([".", ".."])
-import os
 import time
-import logging
+
 import numpy as np
+from hdbscan import HDBSCAN as dbscan
 from numpy import linalg as LA
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import pdist, cdist
-from hdbscan import HDBSCAN as dbscan
-from sempca.utils import metrics
-from sempca.CONSTANTS import SESSION, GET_LOGS_ROOT, LOG_ROOT
+
+from sempca.CONSTANTS import GET_LOGS_ROOT
+from sempca.utils import metrics, get_logger
 
 
 def param_selection(trained_model, inputs, labels):
@@ -51,30 +48,7 @@ class LogClustering(object):
     """
 
     # Dispose Loggers.
-    LogClusteringLogger = logging.getLogger("LogClustering")
-    LogClusteringLogger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "LogClustering.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    LogClusteringLogger.addHandler(console_handler)
-    LogClusteringLogger.addHandler(file_handler)
-    LogClusteringLogger.info(
-        "Construct logger for LogClustering succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    LogClusteringLogger = get_logger("LogClustering")
 
     def __init__(
         self,
@@ -233,30 +207,7 @@ class LogClustering(object):
 
 
 class Solitary_HDBSCAN:
-    HDBSCANLogger = logging.getLogger("Solitary_HDBSCAN")
-    HDBSCANLogger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(logging.DEBUG)
-    console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "Solitary_HDBSCAN.log"))
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-        )
-    )
-
-    HDBSCANLogger.addHandler(console_handler)
-    HDBSCANLogger.addHandler(file_handler)
-    HDBSCANLogger.info(
-        "Construct logger for Solitary_HDBSCAN succeeded, current working directory: %s, logs will be written in %s"
-        % (os.getcwd(), LOG_ROOT)
-    )
+    HDBSCANLogger = get_logger("Solitary_HDBSCAN")
 
     def __init__(self, min_cluster_size, min_samples, mode="normal-only"):
         LOG_ROOT = GET_LOGS_ROOT()

@@ -1,38 +1,12 @@
-import logging
-import os
-import sys
-
 import numpy as np
 
-from sempca.CONSTANTS import SESSION, GET_PROJECT_ROOT, GET_LOGS_ROOT
+from sempca.CONSTANTS import GET_PROJECT_ROOT, GET_LOGS_ROOT
+from sempca.utils import get_logger
 
 PROJECT_ROOT = GET_PROJECT_ROOT()
 LOG_ROOT = GET_LOGS_ROOT()
 # Dispose Loggers.
-VocabLogger = logging.getLogger("Vocab")
-VocabLogger.setLevel(logging.DEBUG)
-console_handler = logging.StreamHandler(sys.stderr)
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-    )
-)
-
-file_handler = logging.FileHandler(os.path.join(LOG_ROOT, "VocabLogger.log"))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(name)s - " + SESSION + " - %(levelname)s: %(message)s"
-    )
-)
-
-VocabLogger.addHandler(console_handler)
-VocabLogger.addHandler(file_handler)
-VocabLogger.info(
-    "Construct VocabLogger success, current working directory: %s, logs will be written in %s"
-    % (os.getcwd(), LOG_ROOT)
-)
+VocabLogger = get_logger("Vocab", "VocabLogger")
 
 
 class Vocab(object):
