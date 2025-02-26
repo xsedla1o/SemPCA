@@ -17,20 +17,16 @@ from sempca.utils.common import metrics, get_logger
 
 
 class PCA_PlusPlus(object):
-    # Dispose Loggers.
-    _logger = get_logger("PCA_PlusPlus")
 
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
+        self.logger = get_logger("PCA_PlusPlus")
+
         self.proj_C = None
         self.components = None
         self.n_components = n_components
         self.threshold = threshold
         self.c_alpha = c_alpha
         self.fixed_threshold = threshold
-
-    @property
-    def logger(self):
-        return PCA._logger
 
     def fit(self, X):
         self.logger.info("====== Model summary ======")
@@ -124,9 +120,6 @@ class PCA_PlusPlus(object):
 
 
 class PCA(object):
-    # Dispose Loggers.
-    _logger = get_logger("PCA")
-
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
         """The PCA model for anomaly detection
 
@@ -148,6 +141,7 @@ class PCA(object):
                 c_alpha = 3.8906;  # alpha = 0.0001
                 c_alpha = 4.4172;  # alpha = 0.00001
         """
+        self.logger = get_logger("PCA")
 
         self.proj_C = None
         self.components = None
@@ -155,10 +149,6 @@ class PCA(object):
         self.threshold = threshold
         self.c_alpha = c_alpha
         self.fixed_threshold = threshold
-
-    @property
-    def logger(self):
-        return PCA._logger
 
     def fit(self, X):
         """

@@ -1,27 +1,22 @@
 import numpy as np
 
-from sempca.CONSTANTS import GET_PROJECT_ROOT, GET_LOGS_ROOT
 from sempca.utils import get_logger
-
-PROJECT_ROOT = GET_PROJECT_ROOT()
-LOG_ROOT = GET_LOGS_ROOT()
-# Dispose Loggers.
-VocabLogger = get_logger("Vocab", "VocabLogger")
 
 
 class Vocab(object):
-    ##please always set PAD to zero, otherwise will cause a bug in pad filling (Tensor)
+    # please always set PAD to zero, otherwise will cause a bug in pad filling (Tensor)
     PAD, START, END, UNK = 0, 1, 2, 3
 
     def __init__(self):
+        self.logger = get_logger("Vocab", "VocabLogger")
         self._id2tag = []
         self._id2tag.append("Normal")
         self._id2tag.append("Anomalous")
         reverse = lambda x: dict(zip(x, range(len(x))))
         self._tag2id = reverse(self._id2tag)
         if len(self._tag2id) != len(self._id2tag):
-            VocabLogger.info("serious bug: output tags dumplicated, please check!")
-        VocabLogger.info("Vocab info: #output tags %d" % (self.tag_size))
+            self.logger.info("serious bug: output tags dumplicated, please check!")
+        self.logger.info("Vocab info: #output tags %d" % (self.tag_size))
         self._embed_dim = 0
         self.embeddings = None
 
@@ -43,14 +38,14 @@ class Vocab(object):
             self._id2word.append(word)
 
         word_num = len(self._id2word)
-        VocabLogger.info("Total words: " + str(word_num) + "\n")
-        VocabLogger.info("The dim of pretrained embeddings: %d \n" % (self._embed_dim))
+        self.logger.info("Total words: " + str(word_num) + "\n")
+        self.logger.info("The dim of pretrained embeddings: %d \n" % (self._embed_dim))
         reverse = lambda x: dict(zip(x, range(len(x))))
         self._word2id = reverse(self._id2word)
 
         oov_id = self._word2id.get("<oov>")
         if self.UNK != oov_id:
-            VocabLogger.info("serious bug: oov word id is not correct, please check!")
+            self.logger.info("serious bug: oov word id is not correct, please check!")
 
         embeddings = np.zeros((word_num, self._embed_dim))
         tem_count = 0
@@ -61,7 +56,7 @@ class Vocab(object):
             embeddings[self.UNK] += vector
             tem_count += 1
         if tem_count != word_num - 4:
-            VocabLogger.info("Goes wrong when calculating UNK emb!")
+            self.logger.info("Goes wrong when calculating UNK emb!")
         embeddings[self.UNK] = embeddings[self.UNK] / word_num
         self.embeddings = embeddings
 
@@ -86,18 +81,18 @@ class Vocab(object):
                         allwords.add(curword)
                         self._id2word.append(curword)
         word_num = len(self._id2word)
-        VocabLogger.info("Total words: " + str(word_num) + "\n")
-        VocabLogger.info("The dim of pretrained embeddings: %d \n" % (embedding_dim))
+        self.logger.info("Total words: " + str(word_num) + "\n")
+        self.logger.info("The dim of pretrained embeddings: %d \n" % (embedding_dim))
 
         reverse = lambda x: dict(zip(x, range(len(x))))
         self._word2id = reverse(self._id2word)
 
         if len(self._word2id) != len(self._id2word):
-            VocabLogger.info("serious bug: words dumplicated, please check!")
+            self.logger.info("serious bug: words dumplicated, please check!")
 
         oov_id = self._word2id.get("<oov>")
         if self.UNK != oov_id:
-            VocabLogger.info("serious bug: oov word id is not correct, please check!")
+            self.logger.info("serious bug: oov word id is not correct, please check!")
 
         embeddings = np.zeros((word_num, embedding_dim))
         with open(embfile, encoding="utf-8") as f:
@@ -112,7 +107,7 @@ class Vocab(object):
                     embeddings[self.UNK] += vector
                     tem_count += 1
         if tem_count != word_num - 4:
-            VocabLogger.info("Goes wrong when calculating UNK emb!")
+            self.logger.info("Goes wrong when calculating UNK emb!")
         embeddings[self.UNK] = embeddings[self.UNK] / word_num
 
     def word2id(self, xs):

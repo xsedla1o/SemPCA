@@ -6,7 +6,6 @@ from numpy import linalg as LA
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import pdist, cdist
 
-from sempca.CONSTANTS import GET_LOGS_ROOT
 from sempca.utils import metrics, get_logger
 
 
@@ -47,9 +46,6 @@ class LogClustering(object):
 
     """
 
-    # Dispose Loggers.
-    LogClusteringLogger = get_logger("LogClustering")
-
     def __init__(
         self,
         max_dist=0.3,
@@ -70,7 +66,7 @@ class LogClustering(object):
             cluster_size_dict: dict, the size of each cluster, used to update representatives online
         """
 
-        self.logger = LogClustering.LogClusteringLogger
+        self.logger = get_logger("LogClustering")
         self.max_dist = max_dist
         self.anomaly_threshold = anomaly_threshold
         self.mode = mode
@@ -207,13 +203,8 @@ class LogClustering(object):
 
 
 class Solitary_HDBSCAN:
-    HDBSCANLogger = get_logger("Solitary_HDBSCAN")
-
     def __init__(self, min_cluster_size, min_samples, mode="normal-only"):
-        LOG_ROOT = GET_LOGS_ROOT()
-        # Dispose Loggers.
-
-        self.logger = Solitary_HDBSCAN.HDBSCANLogger
+        self.logger = get_logger("Solitary_HDBSCAN")
         self.min_cluster_size = min_cluster_size
         self.min_samples = min_samples
         self.model = dbscan(

@@ -11,14 +11,8 @@ from sempca.utils import tqdm, get_logger
 
 
 class Preprocessor:
-    # Dispose Loggers.
-    _logger = get_logger("Preprocessor")
-
-    @property
-    def logger(self):
-        return Preprocessor._logger
-
     def __init__(self):
+        self.logger = get_logger("Preprocessor")
         self.dataloader = None
         self.train_event2idx = {}
         self.test_event2idx = {}

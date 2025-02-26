@@ -26,14 +26,9 @@ from sempca.utils.common import (
 
 
 class AttLSTMModel(nn.Module):
-    # Dispose Loggers.
-    _logger = get_logger("AttLSTM")
-
-    @property
-    def logger(self):
-        return AttLSTMModel._logger
 
     def __init__(self, vocab, lstm_layers, lstm_hiddens, dropout, device):
+        self.logger = get_logger("AttLSTM")
         super(AttLSTMModel, self).__init__()
         self.dropout = dropout
         self.logger.info("==== Model Parameters ====")
@@ -95,14 +90,8 @@ class AttLSTMModel(nn.Module):
 
 
 class Dual_LSTM(nn.Module):
-    # Dispose Loggers.
-    _logger = get_logger("Dual_LSTM")
-
-    @property
-    def logger(self):
-        return Dual_LSTM._logger
-
     def __init__(self, vocab, lstm_hiddens, num_classes, dropout, device):
+        self.logger = get_logger("Dual_LSTM")
         super(Dual_LSTM, self).__init__()
         self.dropout = dropout
         self.logger.info("==== Model Parameters ====")
@@ -154,15 +143,9 @@ class Dual_LSTM(nn.Module):
 
 
 class LogAnomaly:
-    # Dispose Loggers.
-    _logger = get_logger("LogAnomaly")
-
-    @property
-    def logger(self):
-        return LogAnomaly._logger
-
     def __init__(self, vocab, hidden, num_classes, device):
-        super(LogAnomaly, self).__init__()
+        self.logger = get_logger("LogAnomaly")
+
         self.vocab = vocab
         self.hidden_size = hidden
         self.batch_size = 128
@@ -338,15 +321,10 @@ class LogAnomaly:
 
 
 # class DeepLog():
-#     # Dispose Loggers.
-#     _logger = get_logger("DeepLog")
-#
-#     @property
-#     def logger(self):
-#         return DeepLog._logger
 #
 #     def __init__(self, input_size, num_layers, hidden, num_classes, device):
-#         super(DeepLog, self).__init__()
+#         self.logger = get_logger("DeepLog")
+#
 #         self.hidden_size = hidden
 #         self.test_batch_size = 1
 #         self.device = device
@@ -590,15 +568,9 @@ class DeepLog(nn.Module):
 
 
 class LogRobust:
-    # Dispose Loggers.
-    _logger = get_logger("LogRobust")
-
-    @property
-    def logger(self):
-        return LogRobust._logger
-
     def __init__(self, vocab, hidden, layer, device):
-        super(LogRobust, self).__init__()
+        self.logger = get_logger("LogRobust")
+
         self.vocab = vocab
         self.id2tag = {0: "Normal", 1: "Anomalous"}
         self.hidden_size = hidden

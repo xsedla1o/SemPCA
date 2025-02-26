@@ -8,15 +8,9 @@ from sempca.utils import get_logger
 
 
 class Sequential_Add:
-    # Dispose Loggers.
-    _logger = get_logger("Sequential_Add", "StaticLogger.log")
-
-    @property
-    def logger(self):
-        return Sequential_Add._logger
-
     def __init__(self, id2embed):
         assert isinstance(id2embed, dict)
+        self.logger = get_logger("Sequential_Add", "StaticLogger.log")
         self.vocab_size = len(id2embed)
         self.word_dim = id2embed[1].shape
         self.id2embed = id2embed
@@ -50,14 +44,8 @@ class Sequential_Add:
 
 
 class FeatureExtractor(object):
-    # Dispose Loggers.
-    _logger = get_logger("FeatureExtractor", "StaticLogger.log")
-
-    @property
-    def logger(self):
-        return FeatureExtractor._logger
-
     def __init__(self):
+        self.logger = get_logger("FeatureExtractor", "StaticLogger.log")
         self.idf_vec = None
         self.mean_vec = None
         self.events = None

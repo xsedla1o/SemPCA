@@ -7,19 +7,13 @@ from sempca.utils import tqdm, get_logger
 
 
 class HDFSLoader(BasicDataLoader):
-    # Dispose Loggers.
-    _logger = get_logger("HDFSLoader")
-
-    @property
-    def logger(self):
-        return HDFSLoader._logger
-
     def __init__(
         self,
         in_file=None,
         datasets_base=os.path.join(PROJECT_ROOT, "datasets/HDFS"),
         semantic_repr_func=None,
     ):
+        self.logger = get_logger("HDFSLoader")
         super(HDFSLoader, self).__init__()
         self.blk_rex = re.compile(r"blk_[-]{0,1}[0-9]+")
         if not os.path.exists(in_file):

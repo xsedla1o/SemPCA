@@ -1,24 +1,14 @@
 import datetime
 import os
 import re
-import sys
+from collections import OrderedDict
 
 from sempca.CONSTANTS import PROJECT_ROOT
 from sempca.preprocessing.BasicLoader import BasicDataLoader
 from sempca.utils import tqdm, get_logger
 
-sys.path.extend([".", ".."])
-from collections import OrderedDict
-
 
 class SpiritLoader(BasicDataLoader):
-    # Construct logger.
-    _logger = get_logger("SpiritLoader")
-
-    @property
-    def logger(self):
-        return SpiritLoader._logger
-
     def __init__(
         self,
         in_file=os.path.join(PROJECT_ROOT, "datasets/Spirit/Spirit.log"),
@@ -26,6 +16,7 @@ class SpiritLoader(BasicDataLoader):
         dataset_base=os.path.join(PROJECT_ROOT, "datasets/Spirit"),
         semantic_repr_func=None,
     ):
+        self.logger = get_logger("SpiritLoader")
         super(SpiritLoader, self).__init__()
         self.remove_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         self.regs = {

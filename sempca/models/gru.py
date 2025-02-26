@@ -6,13 +6,10 @@ from sempca.utils import drop_input_independent, get_logger
 
 
 class AttGRUModel(nn.Module):
-    # Dispose Loggers.
-    AttGRULogger = get_logger("AttGRU")
-
     def __init__(self, embedding, lstm_layers, lstm_hiddens, dropout):
         super(AttGRUModel, self).__init__()
 
-        self.logger = AttGRUModel.AttGRULogger
+        self.logger = get_logger("AttGRU")
         self.dropout = dropout
         self.logger.info("==== Model Parameters ====")
         vocab_size, word_dims = embedding.shape

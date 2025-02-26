@@ -12,13 +12,6 @@ from sempca.utils import tqdm, get_logger
 
 
 class BGLLoader(BasicDataLoader):
-    # Construct logger.
-    _logger = get_logger("BGLLoader")
-
-    @property
-    def logger(self):
-        return BGLLoader._logger
-
     def __init__(
         self,
         in_file=None,
@@ -42,6 +35,7 @@ class BGLLoader(BasicDataLoader):
         dataset_base: dataset base path
         semantic_repr_func: semantic representation function
         """
+        self.logger = get_logger("BGLLoader")
         super(BGLLoader, self).__init__()
 
         assert isinstance(win_secs, int) or isinstance(win_lines, int), (

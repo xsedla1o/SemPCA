@@ -8,19 +8,17 @@ from drain3.template_miner_config import TemplateMinerConfig
 from sempca.CONSTANTS import PROJECT_ROOT
 from sempca.utils import tqdm, get_logger
 
-# Dispose Loggers.
-DrainLogger = get_logger("drain")
-
 
 class Drain3Parser:
     def __init__(self, config_file, persistence_folder):
+        self.logger = get_logger("drain")
         self.config = TemplateMinerConfig()
         if not os.path.exists(config_file):
-            DrainLogger.info(
+            self.logger.info(
                 "No configuration file specified, use default values for Drain."
             )
         else:
-            DrainLogger.info("Load Drain configuration from %s" % config_file)
+            self.logger.info("Load Drain configuration from %s" % config_file)
             self.config.load(config_file)
         self.config.profiling_enabled = False
         persistence_folder = os.path.join(
@@ -32,20 +30,20 @@ class Drain3Parser:
         )
         self.persistence_folder = persistence_folder
         if not os.path.exists(persistence_folder):
-            DrainLogger.warning("Persistence folder does not exist, creating one.")
+            self.logger.warning("Persistence folder does not exist, creating one.")
             os.makedirs(persistence_folder)
         persistence_file = os.path.join(persistence_folder, "persistence")
-        DrainLogger.info("Searching for target persistence file %s" % persistence_file)
+        self.logger.info("Searching for target persistence file %s" % persistence_file)
         persistence_file = os.path.join(persistence_folder, persistence_file)
         fp = FilePersistence(persistence_file)
         self.parser = TemplateMiner(persistence_handler=fp, config=self.config)
         self.load("File", persistence_file)
 
     def parse_file(self, in_file, remove_cols=None, clean=False, encode="utf-8"):
-        DrainLogger.info("Start parsing input file %s" % in_file)
+        self.logger.info("Start parsing input file %s" % in_file)
         with open(in_file, "r", encoding=encode) as reader:
             if remove_cols:
-                DrainLogger.info(
+                self.logger.info(
                     "Removing columns: [%s]" % (" ".join([str(x) for x in remove_cols]))
                 )
             for line in tqdm(reader.readlines()):
@@ -62,7 +60,7 @@ class Drain3Parser:
         ) as writer:
             for cluster in self.parser.drain.clusters:
                 writer.write(str(cluster) + "\n")
-        DrainLogger.info("Parsing file finished.")
+        self.logger.info("Parsing file finished.")
         return self.parser.drain.clusters
 
     def remove_columns(self, line, remove_cols, clean=False):
@@ -93,27 +91,28 @@ class Drain3Parser:
     def load(self, type, input):
         if type == "File":
             if not os.path.exists(input):
-                DrainLogger.info(
+                self.logger.info(
                     "Persistence file %s not found, please train a new one." % input
                 )
                 self.to_update = True
             else:
-                DrainLogger.info("Persistence file found, loading.")
+                self.logger.info("Persistence file found, loading.")
                 self.to_update = False
                 fp = FilePersistence(input)
                 self.parser = TemplateMiner(config=self.config, persistence_handler=fp)
                 self.parser.load_state()
-                DrainLogger.info("Loaded.")
+                self.logger.info("Loaded.")
             pass
         else:
-            DrainLogger.error(
+            self.logger.error(
                 "We are currently not supporting other types of persistence."
             )
             raise NotImplementedError
 
 
 if __name__ == "__main__":
-    DrainLogger.info("Testing program start.")
+    log = get_logger("drain")
+    log.info("Testing program start.")
     remove_cols = [0, 1, 2, 3, 4]
     parser = Drain3Parser(
         config_file=os.path.join(PROJECT_ROOT, "conf/HDFS.ini"),
@@ -124,9 +123,9 @@ if __name__ == "__main__":
 
     if parser.to_update:
         # learn log events from raw log.
-        DrainLogger.info("Start training a new parser.")
+        log.info("Start training a new parser.")
         if not os.path.exists(input_file):
-            DrainLogger.error(
+            log.error(
                 "File %s not found. Please check the dataset folder" % input_file
             )
             exit(1)

@@ -12,14 +12,8 @@ num_oov = 0
 
 
 class Simple_template_TF_IDF:
-    # Dispose Loggers.
-    _logger = get_logger("Simple_template_TF_IDF")
-
-    @property
-    def logger(self):
-        return Simple_template_TF_IDF._logger
-
     def __init__(self):
+        self.logger = get_logger("Simple_template_TF_IDF")
         self._word2vec = {}
         self.vocab_size = 0
         self.load_word2vec()

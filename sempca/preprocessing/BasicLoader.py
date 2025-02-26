@@ -41,10 +41,6 @@ class BasicDataLoader:
         return
 
     @abc.abstractmethod
-    def logger(self):
-        return
-
-    @abc.abstractmethod
     def _pre_process(self, line):
         return
 
