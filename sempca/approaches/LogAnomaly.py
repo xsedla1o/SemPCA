@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 from sempca.CONSTANTS import PROJECT_ROOT, device
-from sempca.models.lstm import LogAnomaly
+from sempca.models import LogAnomaly
 from sempca.module import Optimizer, Vocab
 from sempca.preprocessing import Preprocessor, cut_by_613
 from sempca.representations import FeatureExtractor, Simple_template_TF_IDF

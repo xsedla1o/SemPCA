@@ -8,8 +8,8 @@ import torch.nn as nn
 from sklearn.decomposition import FastICA
 
 from sempca.CONSTANTS import PROJECT_ROOT, device
-from sempca.models.lstm import PLELog
-from sempca.module.optimizer import Optimizer
+from sempca.models import PLELog
+from sempca.module import Optimizer
 from sempca.preprocessing import Preprocessor, cut_by_613, Probabilistic_Labeling
 from sempca.representations import Sequential_Add, Simple_template_TF_IDF
 from sempca.utils import (

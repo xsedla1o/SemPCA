@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 
-from sempca.models.pca import PCA
+from sempca.models import PCA
 from sempca.preprocessing import cut_by_613, Preprocessor
 from sempca.representations import FeatureExtractor
 

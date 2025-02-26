@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 from sempca.CONSTANTS import PROJECT_ROOT, device
-from sempca.models.lstm import LogRobust
+from sempca.models import LogRobust
 from sempca.module import Optimizer, Vocab
 from sempca.preprocessing import cut_by_613, Preprocessor
 from sempca.representations import Simple_template_TF_IDF

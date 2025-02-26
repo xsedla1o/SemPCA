@@ -1,6 +1,6 @@
 import argparse
 
-from sempca.models.pca import PCA_PlusPlus
+from sempca.models import PCA_PlusPlus
 from sempca.preprocessing import Preprocessor, cut_by_613
 from sempca.representations import Sequential_Add, Simple_template_TF_IDF
 
