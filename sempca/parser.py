@@ -23,7 +23,7 @@ class Drain3Parser:
         self.config.profiling_enabled = False
         persistence_folder = os.path.join(
             persistence_folder,
-            "ibm_drain_depth-"
+            "drain_depth-"
             + str(self.config.drain_depth)
             + "_st-"
             + str(self.config.drain_sim_th),

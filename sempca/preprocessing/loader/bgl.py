@@ -1,42 +1,78 @@
 import os
 import re
 from collections import OrderedDict
+from functools import partial
 from typing import Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
 
-from sempca.const import PROJECT_ROOT
-from sempca.preprocessing.loader import BasicDataLoader
+from sempca.preprocessing.loader import BasicDataLoader, DataPaths
 from sempca.preprocessing.loader.templates import bgl_templates
 from sempca.utils import tqdm
+
+time_lengths = [
+    0,
+    1,
+    2,
+    5,
+    10,
+    20,
+    30,
+    60,
+    120,
+    300,
+    600,
+    1200,
+    1800,
+    3600,
+    3600 * 24,
+    3600 * 24 * 7,
+    3600 * 24 * 30,
+]
+line_lengths = [
+    0,
+    1,
+    2,
+    5,
+    10,
+    50,
+    100,
+    200,
+    500,
+    1000,
+    5000,
+    10000,
+    15000,
+    20000,
+    50000,
+    100000,
+]
 
 
 class BGLLoader(BasicDataLoader):
     def __init__(
         self,
-        in_file=None,
+        paths: DataPaths,
+        semantic_repr_func=None,
         group_component: bool = False,
         win_secs: int = None,
         win_lines: int = 20,
         win_kind: str = "tumbling",
         win_step: int = 1,
-        dataset_base=os.path.join(PROJECT_ROOT, "datasets/BGL"),
-        semantic_repr_func=None,
     ):
         """
         Initialize BGLLoader.
 
         Parameters
         ----------
-        in_file: input file path
+        paths: dataset and persistence paths configuration
         group_component: whether to group logs by components
         win_secs: max window size in seconds
         win_lines: max window size in lines
-        dataset_base: dataset base path
         semantic_repr_func: semantic representation function
         """
-        super(BGLLoader, self).__init__()
+        super(BGLLoader, self).__init__(paths, semantic_repr_func)
 
         assert isinstance(win_secs, int) or isinstance(win_lines, int), (
             "At least one of win_secs and win_lines should be an integer."
@@ -51,10 +87,9 @@ class BGLLoader(BasicDataLoader):
         win_kinds = ["tumbling", "sliding"]
         assert win_kind in win_kinds, f"win_kind, must be one of {win_kinds}"
 
-        if not os.path.exists(in_file):
+        if not os.path.exists(self.paths.in_file):
             self.logger.error("Input file not found, please check.")
             exit(1)
-        self.in_file = in_file
         self.remove_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         self.group_component = group_component
         self.win_secs = win_secs
@@ -63,9 +98,7 @@ class BGLLoader(BasicDataLoader):
         self.win_kind = win_kind
         self.win_step = win_step
 
-        self.dataset_base = dataset_base
         self._load_raw_log_seqs()
-        self.semantic_repr_func = semantic_repr_func
 
         self._dataset_lines = None
 
@@ -77,16 +110,14 @@ class BGLLoader(BasicDataLoader):
                 after_process.append(token)
         return " ".join(after_process)
 
-    def parse_by_Official(self):
+    def parse_by_official(self):
         self._restore()
         # Define official templates
         templates = bgl_templates
 
-        save_path = os.path.join(PROJECT_ROOT, "datasets/BGL/persistences/official")
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-        templates_file = os.path.join(save_path, "BGL_templates.txt")
-        log2temp_file = os.path.join(save_path, "log2temp.txt")
+        os.makedirs(self.paths.official_dir, exist_ok=True)
+        templates_file = self.paths.templates_file
+        log2temp_file = self.paths.log2temp_file
         if os.path.exists(templates_file) and os.path.exists(log2temp_file):
             self.logger.info(
                 "Found parsing result, please note that this does not guarantee a smooth execution."
@@ -106,7 +137,7 @@ class BGLLoader(BasicDataLoader):
         else:
             for id, template in enumerate(templates):
                 self.templates[id] = template
-            with open(self.in_file, "r", encoding="utf-8") as reader:
+            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 log_id = 0
                 for line in tqdm(reader.readlines()):
                     line = line.strip()
@@ -139,7 +170,7 @@ class BGLLoader(BasicDataLoader):
                     writer.write(",".join([str(logid), str(tempid)]) + "\n")
             # with open(logseq_file, 'w', encoding='utf-8') as writer:
             #     self._save_log_event_seqs(writer)
-        self._prepare_semantic_embed(os.path.join(save_path, "event2semantic.vec"))
+        self._prepare_semantic_embed(self.paths.semantic_vector_file)
         # Summarize log event sequences.
         for block, seq in self.block2seqs.items():
             self.block2eventseq[block] = []
@@ -153,8 +184,8 @@ class BGLLoader(BasicDataLoader):
         -------
         None
         """
-        sequence_file = os.path.join(self.dataset_base, "raw_log_seqs.txt")
-        label_file = os.path.join(self.dataset_base, "label.txt")
+        sequence_file = self.paths.sequence_file
+        label_file = self.paths.label_file
         if os.path.exists(sequence_file) and os.path.exists(label_file):
             self.logger.info(
                 "Start load from previous extraction. File path %s" % sequence_file
@@ -175,7 +206,7 @@ class BGLLoader(BasicDataLoader):
 
         else:
             self.logger.info("Start loading BGL log sequences.")
-            with open(self.in_file, "r", encoding="utf-8") as reader:
+            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 nodes = self._component_grouping(reader)
 
                 if self.win_kind == "tumbling":
@@ -215,35 +246,53 @@ class BGLLoader(BasicDataLoader):
             self._dataset_lines = nodes[""][-1][0] + 1
         return nodes
 
-    def _group_by_tumbling_window(self, nodes: Dict[str, List[Tuple[int, str]]]):
-        win_secs = self.win_secs
-        win_lines = self.win_lines
+    @staticmethod
+    def _get_window_end(ts_i, win_secs):
+        return ts_i + win_secs if win_secs is not None else None
 
-        def get_window_end(ts_i_):
-            return ts_i_ + win_secs if win_secs is not None else None
-
+    @staticmethod
+    def _get_end_condition(win_secs, win_lines):
         if win_secs is not None and win_lines is not None:
 
             def end_condition(seq_, ts_i_, window_end_):
                 return window_end_ is not None and (
                     ts_i_ > window_end_ or len(seq_) + 1 > win_lines
                 )
+
+            return end_condition
         elif win_secs is not None:
 
             def end_condition(_, ts_i_, window_end_):
                 return window_end_ is not None and ts_i_ > window_end_
+
+            return end_condition
         elif win_lines is not None:
 
             def end_condition(seq_, _, _a):
                 return seq_ is not None and len(seq_) + 1 > win_lines
+
+            return end_condition
         else:
             raise ValueError("Either win_secs or win_lines must be set")
 
-        def find_hist_bin(value, bins):
-            for k in bins:
-                if value <= k:
-                    return k
-            return k
+    @staticmethod
+    def find_hist_bin(value, bins):
+        for k in bins:
+            if value <= k:
+                return k
+        return k
+
+    def find_2d_hist_bin(self, x_val, y_val, hist):
+        x = self.find_hist_bin(x_val, hist.index)
+        y = self.find_hist_bin(y_val, hist.columns)
+        return x, y
+
+    def _group_by_tumbling_window(self, nodes: Dict[str, List[Tuple[int, str]]]):
+        win_secs = self.win_secs
+        win_lines = self.win_lines
+
+        get_window_end = partial(self._get_window_end, win_secs=win_secs)
+        end_condition = self._get_end_condition(win_secs, win_lines)
 
         self.logger.info(
             f"Max window: {(win_secs or 'unlimited')} seconds, "
@@ -251,44 +300,9 @@ class BGLLoader(BasicDataLoader):
         )
         pbar = tqdm(total=self._dataset_lines, unit="lines")
 
-        time_lengths = [
-            0,
-            1,
-            2,
-            5,
-            10,
-            20,
-            30,
-            60,
-            120,
-            300,
-            600,
-            1200,
-            1800,
-            3600,
-            3600 * 24,
-            3600 * 24 * 7,
-            3600 * 24 * 30,
-        ]
-        line_lengths = [
-            0,
-            1,
-            2,
-            5,
-            10,
-            50,
-            100,
-            200,
-            500,
-            1000,
-            5000,
-            10000,
-            15000,
-            20000,
-            50000,
-            100000,
-        ]
         hist2d = pd.DataFrame(index=time_lengths, columns=line_lengths).fillna(0)
+        find_bin = partial(self.find_2d_hist_bin, hist=hist2d)
+
         hist2d_anomalies = hist2d.copy()
 
         real_lengths = []
@@ -311,9 +325,7 @@ class BGLLoader(BasicDataLoader):
                     real_lengths.append(ts_last - ts_first)
 
                     # Find the right bin for the histogram
-                    x = find_hist_bin(ts_last - ts_first, hist2d.index)
-                    y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
-
+                    (x, y) = find_bin(ts_last - ts_first, len(self.block2seqs[b_id]))
                     hist2d.loc[x, y] += 1
                     if label == "Anomalous":
                         hist2d_anomalies.loc[x, y] += 1
@@ -343,11 +355,14 @@ class BGLLoader(BasicDataLoader):
                 real_lengths.append(ts_last - ts_first)
 
                 # Find the right bin for the histogram
-                x = find_hist_bin(ts_last - ts_first, hist2d.index)
-                y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
+                (x, y) = find_bin(ts_last - ts_first, len(self.block2seqs[b_id]))
                 hist2d.loc[x, y] += 1
         pbar.close()
 
+        self._log_debug_stats(real_lengths)
+        self._log_debug_histogram(hist2d, hist2d_anomalies)
+
+    def _log_debug_stats(self, real_lengths):
         self.logger.debug(
             f"blocks {len(self.blocks)}, seqs {len(self.block2seqs)}, "
             f"lines {sum(len(seq) for seq in self.block2seqs.values())}"
@@ -370,7 +385,8 @@ class BGLLoader(BasicDataLoader):
             f"avg {np.mean(real_lengths):.2f}, median {np.median(real_lengths)}"
         )
 
-        # Make 2D histogram
+    def _log_debug_histogram(self, hist2d, hist2d_anomalies):
+        """Make 2D histogram"""
         self.logger.debug("2D histogram:")
         self.logger.debug(hist2d)
         self.logger.debug(
@@ -390,32 +406,8 @@ class BGLLoader(BasicDataLoader):
         win_lines = self.win_lines
 
         step = self.win_step
-
-        def get_window_end(ts_i_):
-            return ts_i_ + win_secs if win_secs is not None else None
-
-        if win_secs is not None and win_lines is not None:
-
-            def end_condition(seq_, ts_i_, window_end_):
-                return window_end_ is not None and (
-                    ts_i_ > window_end_ or len(seq_) + 1 > win_lines
-                )
-        elif win_secs is not None:
-
-            def end_condition(_, ts_i_, window_end_):
-                return window_end_ is not None and ts_i_ > window_end_
-        elif win_lines is not None:
-
-            def end_condition(seq_, _, _a):
-                return seq_ is not None and len(seq_) + 1 > win_lines
-        else:
-            raise ValueError("Either win_secs or win_lines must be set")
-
-        def find_hist_bin(value, bins):
-            for k in bins:
-                if value <= k:
-                    return k
-            return k
+        get_window_end = partial(self._get_window_end, win_secs=win_secs)
+        end_condition = self._get_end_condition(win_secs, win_lines)
 
         self.logger.info(
             f"Max window: {(win_secs or 'unlimited')} seconds, "
@@ -423,44 +415,8 @@ class BGLLoader(BasicDataLoader):
         )
         pbar = tqdm(total=self._dataset_lines, unit="lines")
 
-        time_lengths = [
-            0,
-            1,
-            2,
-            5,
-            10,
-            20,
-            30,
-            60,
-            120,
-            300,
-            600,
-            1200,
-            1800,
-            3600,
-            3600 * 24,
-            3600 * 24 * 7,
-            3600 * 24 * 30,
-        ]
-        line_lengths = [
-            0,
-            1,
-            2,
-            5,
-            10,
-            50,
-            100,
-            200,
-            500,
-            1000,
-            5000,
-            10000,
-            15000,
-            20000,
-            50000,
-            100000,
-        ]
         hist2d = pd.DataFrame(index=time_lengths, columns=line_lengths).fillna(0)
+        find_bins = partial(self.find_2d_hist_bin, hist=hist2d)
         hist2d_anomalies = hist2d.copy()
 
         real_lengths = []
@@ -492,8 +448,7 @@ class BGLLoader(BasicDataLoader):
                     real_lengths.append(ts_last - ts_first)
 
                     # Find the right bin for the histogram
-                    x = find_hist_bin(ts_last - ts_first, hist2d.index)
-                    y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
+                    (x, y) = find_bins(ts_last - ts_first, len(self.block2seqs[b_id]))
 
                     hist2d.loc[x, y] += 1
                     if label == "Anomalous":
@@ -553,44 +508,9 @@ class BGLLoader(BasicDataLoader):
                 real_lengths.append(ts_last - ts_first)
 
                 # Find the right bin for the histogram
-                x = find_hist_bin(ts_last - ts_first, hist2d.index)
-                y = find_hist_bin(len(self.block2seqs[b_id]), hist2d.columns)
+                (x, y) = find_bins(ts_last - ts_first, len(self.block2seqs[b_id]))
                 hist2d.loc[x, y] += 1
         pbar.close()
 
-        self.logger.debug(
-            f"blocks {len(self.blocks)}, seqs {len(self.block2seqs)}, "
-            f"lines {sum(len(seq) for seq in self.block2seqs.values())}"
-        )
-        self.logger.debug(
-            f"labels {len(self.block2label)}, anomalous "
-            f"{sum(1 for label in self.block2label.values() if label == 'Anomalous')}"
-        )
-
-        # Make histogram of sequence lengths
-        seq_lengths = [len(seq) for seq in self.block2seqs.values()]
-        self.logger.debug(
-            f"Sequence lengths: min {min(seq_lengths)}, max {max(seq_lengths)}, "
-            f"avg {np.mean(seq_lengths):.2f}, median {np.median(seq_lengths)}"
-        )
-
-        # Make time histogram
-        self.logger.debug(
-            f"Time lengths: min {min(real_lengths)}, max {max(real_lengths)}, "
-            f"avg {np.mean(real_lengths):.2f}, median {np.median(real_lengths)}"
-        )
-
-        # Make 2D histogram
-        self.logger.debug("2D histogram:")
-        self.logger.debug(hist2d)
-        self.logger.debug(
-            f"rows:\n{hist2d.sum(axis=1)}\n"
-            f"cols:\n{hist2d.sum(axis=0)}\n"
-            f"total: {hist2d.sum(axis=0).sum()}"
-        )
-
-        self.logger.debug("2D histogram (anomalies):")
-        self.logger.debug(hist2d_anomalies)
-
-        self.logger.debug("2D histogram (normal):")
-        self.logger.debug(hist2d - hist2d_anomalies)
+        self._log_debug_stats(real_lengths)
+        self._log_debug_histogram(hist2d, hist2d_anomalies)

@@ -4,19 +4,18 @@ import re
 from collections import OrderedDict
 
 from sempca.const import PROJECT_ROOT
-from sempca.preprocessing.loader import BasicDataLoader
+from sempca.preprocessing.loader import BasicDataLoader, DataPaths
 from sempca.utils import tqdm
 
 
 class SpiritLoader(BasicDataLoader):
     def __init__(
         self,
-        in_file=os.path.join(PROJECT_ROOT, "datasets/Spirit/Spirit.log"),
+        paths: DataPaths,
         window_size=120,
-        dataset_base=os.path.join(PROJECT_ROOT, "datasets/Spirit"),
         semantic_repr_func=None,
     ):
-        super(SpiritLoader, self).__init__()
+        super(SpiritLoader, self).__init__(paths, semantic_repr_func)
         self.remove_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         self.regs = {
             "reg": [
@@ -27,13 +26,12 @@ class SpiritLoader(BasicDataLoader):
             "replace": ["[ID]", "[IP]", "[PATH]"],
         }
         self.node_idx = 7
-        self.in_file = in_file
         self.window_size = window_size
-        self.dataset_base = dataset_base
-        self.semantic_repr_func = semantic_repr_func
-        self.file_for_parsing = os.path.join(dataset_base, "Cleaned_Spirit.log")
-        if not os.path.exists(self.in_file):
-            self.logger.error("File %s not found, please check." % self.in_file)
+        self.file_for_parsing = os.path.join(
+            self.paths.dataset_dir, "Cleaned_Spirit.log"
+        )
+        if not os.path.exists(self.paths.in_file):
+            self.logger.error("File %s not found, please check." % self.paths.in_file)
             raise FileNotFoundError
         self._load_raw_log_seqs()
 
@@ -49,8 +47,8 @@ class SpiritLoader(BasicDataLoader):
         return processed_line
 
     def _load_raw_log_seqs(self):
-        sequence_file = os.path.join(self.dataset_base, "raw_log_seqs.txt")
-        label_file = os.path.join(self.dataset_base, "label.txt")
+        sequence_file = self.paths.sequence_file
+        label_file = self.paths.label_file
         if os.path.exists(sequence_file) and os.path.exists(label_file):
             self.logger.info(
                 "Start load from previous extraction. File path %s" % sequence_file
@@ -73,13 +71,20 @@ class SpiritLoader(BasicDataLoader):
             self._load_by_fixed_window(sequence_file, label_file)
             # self._load_by_time_window(sequence_file, label_file)
 
+    def parse_by_official(self):
+        self.logger.error("Parsing by official templates not implemented.")
+        raise NotImplementedError
+
+    def parse_by_drain(self, core_jobs=5, encode="iso8859-1"):
+        return super(SpiritLoader, self).parse_by_drain(core_jobs, encode)
+
     def _load_by_node_time_window(self, sequence_file, label_file):
         self.logger.info("Start loading Spirit log sequences.")
         nodes = OrderedDict()
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
 
-        with open(self.in_file, "r", encoding="iso-8859-1") as reader:
+        with open(self.paths.in_file, "r", encoding="iso-8859-1") as reader:
             line_num = 0
             for line in reader.readlines():
                 line = line.strip()
@@ -152,7 +157,7 @@ class SpiritLoader(BasicDataLoader):
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
 
-        with open(self.in_file, "r", encoding="iso-8859-1") as reader:
+        with open(self.paths.in_file, "r", encoding="iso-8859-1") as reader:
             line_num = 0
             for line in reader.readlines():
                 line = line.strip()
@@ -215,7 +220,7 @@ class SpiritLoader(BasicDataLoader):
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
 
-        with open(self.in_file, "r", encoding="iso-8859-1") as reader:
+        with open(self.paths.in_file, "r", encoding="iso-8859-1") as reader:
             line_num = 0
             for line in reader.readlines():
                 line = line.strip()

@@ -1,2 +1,2 @@
 cd ../..
-python -u ./sempca/approaches/DeepLog.py --dataset Spirit --parser IBM --mode test --num_candidates 380
+python -u ./sempca/approaches/DeepLog.py --dataset Spirit --mode test --num_candidates 380

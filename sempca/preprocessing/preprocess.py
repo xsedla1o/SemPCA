@@ -1,11 +1,20 @@
 import gc
 import os
 from collections import Counter
+from typing import Type
 
 from sempca.const import PROJECT_ROOT
 from sempca.entities.instances import Instance
 from sempca.preprocessing import BGLLoader, HDFSLoader, SpiritLoader
+from sempca.preprocessing.loader.basic import DataPaths, BasicDataLoader
 from sempca.utils import tqdm, get_logger
+
+set2dataloader = {
+    "HDFS": HDFSLoader,
+    "BGL": BGLLoader,
+    "BGLSample": BGLLoader,
+    "Spirit": SpiritLoader,
+}
 
 
 class Preprocessor:
@@ -29,7 +38,7 @@ class Preprocessor:
         Preprocess approach, log loading, parsing and cutting.
         Please be noted that if you want to add more datasets or parsers, you should modify here.
         :param dataset: Specified dataset
-        :param parsing: Specified log parser, IBM(Drain) now supported.
+        :param parsing: Specified log parser, Drain now supported.
         :param template_encoding: Semantic representation functio for log templates.
         :param cut_func: Curtting function for all instances.
         :return: Train, Dev and Test data in list of instances.
@@ -40,50 +49,20 @@ class Preprocessor:
         )
         self.dataset = dataset
         self.parsing = parsing
-        dataloader = None
-        parser_config = None
-        parser_persistence = os.path.join(
-            PROJECT_ROOT, "datasets/" + dataset + "/persistences"
-        )
-        encode = "utf-8"
-        if dataset == "HDFS":
-            dataloader = HDFSLoader(
-                in_file=os.path.join(PROJECT_ROOT, "datasets/HDFS/HDFS.log"),
-                semantic_repr_func=template_encoding,
-            )
-            parser_config = os.path.join(PROJECT_ROOT, "conf/HDFS.ini")
-        elif dataset == "BGL" or dataset == "BGLSample":
-            in_file = os.path.join(
-                PROJECT_ROOT, "datasets/" + dataset + "/" + dataset + ".log"
-            )
-            dataset_base = os.path.join(PROJECT_ROOT, "datasets/" + dataset)
-            dataloader = BGLLoader(
-                in_file=in_file,
-                dataset_base=dataset_base,
-                semantic_repr_func=template_encoding,
-            )
-            parser_config = os.path.join(PROJECT_ROOT, "conf/BGL.ini")
-        elif dataset == "Spirit":
-            dataloader = SpiritLoader(
-                in_file=os.path.join(PROJECT_ROOT, "datasets/Spirit/Spirit.log"),
-                semantic_repr_func=template_encoding,
-            )
-            parser_config = os.path.join(PROJECT_ROOT, "conf/Spirit.ini")
-            encode = "iso8859-1"
-        self.dataloader = dataloader
+        self.paths = DataPaths(dataset_name=dataset)
 
-        if parsing == "IBM":
-            self.dataloader.parse_by_IBM(
-                config_file=parser_config,
-                persistence_folder=parser_persistence,
-                encode=encode,
-            )
-        elif parsing == "Official":
-            self.dataloader.parse_by_Official()
-        else:
-            self.logger.error("Parsing method %s not implemented yet.")
-            raise NotImplementedError
+        self.dataloader = self.get_dataloader(dataset)(
+            self.paths, semantic_repr_func=template_encoding
+        )
+
+        self.dataloader.parse(parsing)
         return self._gen_instances(cut_func=cut_func)
+
+    def get_dataloader(self, dataset: str) -> Type[BasicDataLoader]:
+        if dataset not in set2dataloader.keys():
+            self.logger.error("Dataset %s not supported." % dataset)
+            raise NotImplementedError
+        return set2dataloader[dataset]
 
     def process_no_split(self, dataset, parsing, template_encoding):
         """
@@ -92,7 +71,6 @@ class Preprocessor:
         :param dataset: Specified dataset
         :param parsing: Specified log parser, IBM(Drain) now supported.
         :param template_encoding: Semantic representation functio for log templates.
-        :param cut_func: Curtting function for all instances.
         :return: Train, Dev and Test data in list of instances.
         """
         self.base = os.path.join(
@@ -100,48 +78,9 @@ class Preprocessor:
         )
         self.dataset = dataset
         self.parsing = parsing
-        dataloader = None
-        parser_config = None
-        parser_persistence = os.path.join(
-            PROJECT_ROOT, "datasets/" + dataset + "/persistences"
-        )
 
-        encode = "utf-8"
-        if dataset == "HDFS":
-            dataloader = HDFSLoader(
-                in_file=os.path.join(PROJECT_ROOT, "datasets/HDFS/HDFS.log"),
-                semantic_repr_func=template_encoding,
-            )
-            parser_config = os.path.join(PROJECT_ROOT, "conf/HDFS.ini")
-        elif dataset == "BGL" or dataset == "BGLSample":
-            in_file = os.path.join(
-                PROJECT_ROOT, "datasets/" + dataset + "/" + dataset + ".log"
-            )
-            dataset_base = os.path.join(PROJECT_ROOT, "datasets/" + dataset)
-            dataloader = BGLLoader(
-                in_file=in_file,
-                dataset_base=dataset_base,
-                semantic_repr_func=template_encoding,
-            )
-            parser_config = os.path.join(PROJECT_ROOT, "conf/BGL.ini")
-        elif dataset == "Spirit":
-            dataloader = SpiritLoader(
-                in_file=os.path.join(PROJECT_ROOT, "datasets/Spirit/Spirit.log"),
-                semantic_repr_func=template_encoding,
-            )
-            parser_config = os.path.join(PROJECT_ROOT, "conf/Spirit.ini")
-            encode = "iso8859-1"
-        self.dataloader = dataloader
-
-        if parsing == "IBM":
-            self.dataloader.parse_by_IBM(
-                config_file=parser_config,
-                persistence_folder=parser_persistence,
-                encode=encode,
-            )
-        else:
-            self.logger.error("Parsing method %s not implemented yet.")
-            raise NotImplementedError
+        self.get_dataloader(dataset)
+        self.dataloader.parse(parsing)
 
         self.logger.info("Start generating instances.")
         instances = []
@@ -158,7 +97,7 @@ class Preprocessor:
             else:
                 self.logger.error("Found mismatch block: %s. Please check." % block)
         self.update_dicts()
-        self.embedding = dataloader.id2embed
+        self.embedding = self.dataloader.id2embed
         return instances
 
     def _gen_instances(self, cut_func=None):
@@ -284,7 +223,7 @@ if __name__ == "__main__":
     template_encoder = TemplateTfIdf()
     processor.process(
         dataset="Spirit",
-        parsing="IBM",
+        parsing="Drain",
         template_encoding=template_encoder.present,
         cut_func=cut_by_613,
     )

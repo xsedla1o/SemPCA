@@ -33,9 +33,9 @@ def main():
     argparser.add_argument("--mode", default="train", type=str, help="train or test")
     argparser.add_argument(
         "--parser",
-        default="IBM",
+        default="Drain",
         type=str,
-        help="Select parser, please see parser list for detail. Default Official.",
+        help="Select parser, please see parser list for detail. Default Drain.",
     )
     argparser.add_argument(
         "--min_cluster_size", type=int, default=100, help="min_cluster_size."

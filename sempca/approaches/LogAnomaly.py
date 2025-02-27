@@ -27,9 +27,9 @@ def main():
     argparser.add_argument("--mode", default="train", type=str, help="train or test")
     argparser.add_argument(
         "--parser",
-        default="IBM",
+        default="Drain",
         type=str,
-        help="Select parser, please see parser list for detail. Default Official.",
+        help="Select parser, please see parser list for detail. Default Drain.",
     )
     argparser.add_argument("--num_layers", default=2, type=int)
     argparser.add_argument("--hidden_size", default=128, type=int)

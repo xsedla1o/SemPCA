@@ -1,12 +1,80 @@
 import abc
 import os
 import time
+from dataclasses import dataclass, field
 from multiprocessing import Manager, Pool
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 
+from sempca.const import PROJECT_ROOT
 from sempca.parser import Drain3Parser
 from sempca.utils import tqdm, get_logger
+
+
+@dataclass
+class DataPaths:
+    """
+    DataPaths is a dataclass that contains all the paths to the files and directories
+    """
+
+    dataset_name: str  # e.g., "HDFS", "BGL"
+    in_file: Union[Path, str] = None
+    project_root: Union[Path, str] = None
+    label_file: Union[Path, str] = None
+    drain_config: Union[Path, str] = None
+    persistence_dir: Union[Path, str] = None
+    dataset_dir: Union[Path, str] = None
+
+    # Dataset-specific paths (computed from dataset_name)
+    official_dir: Path = field(init=False)
+    templates_file: Path = field(init=False)
+    log2temp_file: Path = field(init=False)
+    logseq_file: Path = field(init=False)
+    sequence_file: Path = field(init=False)
+    semantic_vector_file: Path = field(init=False)
+
+    @staticmethod
+    def to_path(path: Union[str, Path, None]) -> Union[Path, None]:
+        if path is not None:
+            return Path(path)
+        return None
+
+    def __post_init__(self):
+        self.project_root = self.to_path(self.project_root)
+        if self.project_root is None:
+            self.project_root = Path(PROJECT_ROOT)
+
+        # Compute dataset-specific paths using the dataset_name
+        self.dataset_dir = self.to_path(self.dataset_dir)
+        if self.dataset_dir is None:
+            self.dataset_dir = self.project_root / "datasets" / self.dataset_name
+
+        self.in_file = self.to_path(self.in_file)
+        if self.in_file is None:
+            self.in_file = self.dataset_dir / f"{self.dataset_name}.log"
+
+        self.label_file = self.to_path(self.label_file)
+        if self.label_file is None:
+            self.label_file = self.dataset_dir / "label.txt"
+
+        self.sequence_file = self.dataset_dir / "raw_log_seqs.txt"
+
+        self.persistence_dir = self.to_path(self.persistence_dir)
+        if self.persistence_dir is None:
+            self.persistence_dir = self.dataset_dir / "persistences"
+
+        self.official_dir = self.persistence_dir / "official"
+        self.templates_file = self.official_dir / f"{self.dataset_name}_templates.txt"
+        self.log2temp_file = self.official_dir / "log2temp.txt"
+        self.logseq_file = self.official_dir / "event_seqs.txt"
+        self.semantic_vector_file = self.official_dir / "event2semantic.vec"
+
+        # Set Drain parsing paths with defaults if not provided.
+        self.drain_config = self.to_path(self.drain_config)
+        if self.drain_config is None:
+            self.drain_config = self.project_root / "conf" / f"{self.dataset_name}.ini"
 
 
 def _async_parsing(parser, lines, log2temp):
@@ -19,24 +87,27 @@ def _async_parsing(parser, lines, log2temp):
 
 
 class BasicDataLoader:
-    def __init__(self):
+    def __init__(self, paths: DataPaths, semantic_repr_func=None):
         self.logger = get_logger(self.__class__.__name__)
-        self.in_file = None
-        self.block2emb = {}
-        self.blocks = []
-        self.templates = {}
-        self.log2temp = {}
-        self.rex = []
-        self.remove_cols = []
+        self.paths = paths
+
+        self.blocks = []  # list of block / sequence IDs
+        self.templates = {}  # dict of template ID to template string
+        self.log2temp = {}  # dict of log ID (line no.) to template ID
+        self.remove_cols = []  # list of column indices to remove
+
         self.id2label = {0: "Normal", 1: "Anomalous"}
         self.label2id = {"Normal": 0, "Anomalous": 1}
-        self.block_set = set()
-        self.block2seqs = {}
-        self.block2label = {}
-        self.block2eventseq = {}
-        self.id2embed = {}
-        self.semantic_repr_func = None
-        self.file_for_parsing = None
+
+        self.block2seqs = {}  # dict of block ID to list of log IDs (line nums.)
+        self.block2label = {}  # dict of block ID to label "Normal" or "Anomalous"
+        self.block2eventseq = {}  # dict of block ID to list of event IDs
+        self.id2embed = {}  # dict of template ID to semantic embedding
+
+        self.semantic_repr_func = semantic_repr_func  # callable to get embeddings
+
+        # Only used by Spirit subclass, ignore for now.
+        self.file_for_parsing = None  # path to a pre-processed file for parsing
 
     @abc.abstractmethod
     def _load_raw_log_seqs(self):
@@ -46,22 +117,38 @@ class BasicDataLoader:
     def _pre_process(self, line):
         return
 
-    def parse_by_IBM(
-        self, config_file, persistence_folder, core_jobs=5, encode="utf-8"
-    ):
+    def parse(self, parsing_method: str):
         """
-        Load parsing results by IDM Drain
-        :param config_file: IDM Drain configuration file.
-        :param persistence_folder: IDM Drain persistence file.
+        :parsing_method: Specify the parsing method, either "Drain" or "Official".
+        :return: Update templates, log2temp attributes in self.
+        """
+        if parsing_method == "Drain":
+            self.parse_by_drain()
+        elif parsing_method == "Official":
+            self.parse_by_official()
+        else:
+            self.logger.error("Parsing method %s not implemented yet.")
+            raise NotImplementedError
+
+    @abc.abstractmethod
+    def parse_by_official(self):
+        """
+        Load parsing results by official templates.
+        :return: Update templates, log2temp attributes in self.
+        """
+
+    def parse_by_drain(self, core_jobs=5, encode="utf-8"):
+        """
+        Load parsing results by Drain
         :return: Update templates, log2temp attributes in self.
         """
         self._restore()
-        if not os.path.exists(config_file):
-            self.logger.error("IBM Drain config file %s not found." % config_file)
+        if not os.path.exists(self.paths.drain_config):
+            self.logger.error(
+                "Drain config file {} not found.", self.paths.drain_config
+            )
             exit(1)
-        parser = Drain3Parser(
-            config_file=config_file, persistence_folder=persistence_folder
-        )
+        parser = Drain3Parser(self.paths.drain_config, self.paths.persistence_dir)
         persistence_folder = parser.persistence_folder
 
         # Specify persistence files.
@@ -77,7 +164,7 @@ class BasicDataLoader:
             in_file = self.file_for_parsing
             remove_columns = []
         else:
-            in_file = self.in_file
+            in_file = self.paths.in_file
             remove_columns = self.remove_cols
         if parser.to_update:
             self.logger.info("No trained parser found, start training.")
@@ -103,7 +190,7 @@ class BasicDataLoader:
                 % persistence_folder
             )
             ori_lines = []
-            with open(self.in_file, "r", encoding="utf-8") as reader:
+            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 log_id = 0
                 for line in tqdm(reader.readlines()):
                     line = line.strip()
@@ -207,7 +294,7 @@ class BasicDataLoader:
         return flag
 
     def _record_parsing_results(self, log_template_mapping_file):
-        # Recording IBM parsing result.log_event_mapping
+        # Recording parsing result.log_event_mapping
         start_time = time.time()
         log_template_mapping_writer = open(
             log_template_mapping_file, "w", encoding="utf-8"

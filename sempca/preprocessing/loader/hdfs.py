@@ -1,45 +1,32 @@
-import os.path
+import os
 import re
 
-from sempca.const import PROJECT_ROOT
 from sempca.preprocessing.loader import BasicDataLoader
+from sempca.preprocessing.loader.basic import DataPaths
 from sempca.preprocessing.loader.templates import hdfs_templates
 from sempca.utils import tqdm
 
 
 class HDFSLoader(BasicDataLoader):
-    def __init__(
-        self,
-        in_file=None,
-        datasets_base=os.path.join(PROJECT_ROOT, "datasets/HDFS"),
-        semantic_repr_func=None,
-    ):
-        super(HDFSLoader, self).__init__()
+    def __init__(self, paths: DataPaths, semantic_repr_func=None):
+        super(HDFSLoader, self).__init__(paths, semantic_repr_func)
         self.blk_rex = re.compile(r"blk_[-]{0,1}[0-9]+")
-        if not os.path.exists(in_file):
+        if not os.path.exists(self.paths.in_file):
             self.logger.error("Input file not found, please check.")
             exit(1)
-        self.in_file = in_file
         self.remove_cols = [0, 1, 2, 3, 4]
-        self.dataset_base = datasets_base
         self._load_raw_log_seqs()
         self._load_hdfs_labels()
-        self.semantic_repr_func = semantic_repr_func
 
     def parse_by_Official(self):
         self._restore()
         templates = hdfs_templates
-        save_path = os.path.join(PROJECT_ROOT, "datasets/HDFS/persistences/official")
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-        templates_file = os.path.join(save_path, "HDFS_templates.txt")
-        log2temp_file = os.path.join(save_path, "log2temp.txt")
-        logseq_file = os.path.join(save_path, "event_seqs.txt")
-        if (
-            os.path.exists(templates_file)
-            and os.path.exists(log2temp_file)
-            and os.path.exists(logseq_file)
-        ):
+
+        os.makedirs(self.paths.official_dir, exist_ok=True)
+        templates_file = self.paths.templates_file
+        log2temp_file = self.paths.log2temp_file
+        logseq_file = self.paths.logseq_file
+        if all(os.path.exists(f) for f in [templates_file, log2temp_file, logseq_file]):
             self.logger.info(
                 "Found parsing result, please note that this does not guarantee a smooth execution."
             )
@@ -55,7 +42,7 @@ class HDFSLoader(BasicDataLoader):
             self.logger.info("Parsing result not found, start a new one.")
             for id, template in enumerate(templates):
                 self.templates[id] = template
-            with open(self.in_file, "r", encoding="utf-8") as reader:
+            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 log_id = 0
                 for line in tqdm(reader.readlines()):
                     line = line.strip()
@@ -92,7 +79,7 @@ class HDFSLoader(BasicDataLoader):
                     writer.write(",".join([str(logid), str(tempid)]) + "\n")
             with open(logseq_file, "w", encoding="utf-8") as writer:
                 self._save_log_event_seqs(writer)
-        self._prepare_semantic_embed(os.path.join(save_path, "event2semantic.vec"))
+        self._prepare_semantic_embed(self.paths.semantic_vector_file)
 
     def _pre_process(self, line):
         tokens = line.strip().split()
@@ -107,10 +94,10 @@ class HDFSLoader(BasicDataLoader):
         Load log sequences from raw HDFS log file.
         :return: Update related attributes in current instance.
         """
-        sequence_file = os.path.join(self.dataset_base, "raw_log_seqs.txt")
+        sequence_file = self.paths.sequence_file
         if not os.path.exists(sequence_file):
             self.logger.info("Start extract log sequences from HDFS raw log file.")
-            with open(self.in_file, "r", encoding="utf-8") as reader:
+            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 log_id = 0
                 for line in tqdm(reader.readlines()):
                     processed_line = self._pre_process(line)
@@ -160,9 +147,7 @@ class HDFSLoader(BasicDataLoader):
         self.logger.info("Extraction finished successfully.")
 
     def _load_hdfs_labels(self):
-        with open(
-            os.path.join(PROJECT_ROOT, "datasets/HDFS/label.txt"), "r", encoding="utf-8"
-        ) as reader:
+        with open(self.paths.label_file, "r", encoding="utf-8") as reader:
             for line in reader.readlines():
                 token = line.strip().split(",")
                 block = token[0]
@@ -174,14 +159,15 @@ if __name__ == "__main__":
     from sempca.representations import TemplateTfIdf
 
     semantic_encoder = TemplateTfIdf()
+    paths = DataPaths(
+        dataset_name="HDFS",
+        in_file="datasets/temp_HDFS/HDFS.log",
+        dataset_dir="datasets/temp_HDFS",
+        persistence_dir="datasets/temp_HDFS/persistences",
+        drain_config="conf/HDFS.ini",
+    )
     loader = HDFSLoader(
-        in_file=os.path.join(PROJECT_ROOT, "datasets/temp_HDFS/HDFS.log"),
-        datasets_base=os.path.join(PROJECT_ROOT, "datasets/temp_HDFS"),
+        paths=paths,
         semantic_repr_func=semantic_encoder.present,
     )
-    loader.parse_by_IBM(
-        config_file=os.path.join(PROJECT_ROOT, "conf/HDFS.ini"),
-        persistence_folder=os.path.join(
-            PROJECT_ROOT, "datasets/temp_HDFS/persistences"
-        ),
-    )
+    loader.parse_by_drain()

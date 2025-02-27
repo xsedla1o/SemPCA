@@ -15,9 +15,9 @@ def main():
     )
     argparser.add_argument(
         "--parser",
-        default="IBM",
+        default="Drain",
         type=str,
-        help="Select parser, please see parser list for detail. Default Official.",
+        help="Select parser, please see parser list for detail. Default Drain.",
     )
     argparser.add_argument(
         "--n_components",
