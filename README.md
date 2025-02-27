@@ -18,19 +18,21 @@ Table of Contents
 ## Project Structure
 
 ```
-├─approaches  		# LogBar main entrance
-├─conf	      		# configurations for Drain
-├─datasets    		# open source Log datasets, i.e. HDFS, BGL and Spirit
-├─entities    		# instances for log data and DL models
-├─logs    
-├─models      		# LSTM, attention-based GRU, Cluster and PCA models
-├─module      		# anomaly detection modules, including classifier, Attention, etc.
-├─outputs   	
-├─parsers     		# Drain parser
-├─preprocessing 	# preprocessing code, data loaders and cutters
-├─representations       # log template and sequence representation methods
-├─scripts		# running scripts for reproduction
-├─utils				
+├──  conf                # configurations for Drain
+├──  datasets            # open source Log datasets, i.e. HDFS, BGL and Spirit
+├──  logs                # log files of the project
+├──  outputs             # pytorch model checkpoints 
+├──  scripts             # running scripts for reproduction
+└──  sempca
+   ├──  approaches       # package entrypoints that include complete pipelines
+   ├──  const.py         # project level constants
+   ├──  entities         # helper classes for representing log messages and templates
+   ├──  models           # LSTM, attention-based GRU, Cluster and PCA models
+   ├──  module           # anomaly detection modules, including classifier, Attention, etc.
+   ├──  parser.py        # Drain parser
+   ├──  preprocessing    # preprocessing code, data loaders and cutters
+   ├──  representations  # log template and sequence representation methods
+   └──  utils.py         # utility functions
 ```
 
 
@@ -41,7 +43,7 @@ We used `3` open-source log datasets, HDFS, BGL, and Spirit.  The table below il
 
 
 | Software System | Description                        | Time Span  | # Messages  | Data Size | Link                                                      |
-| --------------- | ---------------------------------- | ---------- | ----------- | --------- | --------------------------------------------------------- |
+|-----------------|------------------------------------|------------|-------------|-----------|-----------------------------------------------------------|
 | HDFS            | Hadoop distributed file system log | 38.7 hours | 11,175,629  | 1.47 GB   | [LogHub](https://github.com/logpai/loghub)                |
 | BGL             | Blue Gene/L supercomputer log      | 214.7 days | 4,747,963   | 708.76 MB | [Usenix-CFDR Data](https://www.usenix.org/cfdr-data#hpc4) |
 | Spirit          | Spirit supercomputer log           | 2.5 years  | 272,298,969 | 37.34 GB  | [Usenix-CFDR Data](https://www.usenix.org/cfdr-data#hpc4) |
@@ -91,7 +93,7 @@ Other techniques can be executed by the corresponding scripts in a similar way.
 authors are anonymous at the current stage.
 
 | Name | Email Address |
-| ---- | ------------- |
+|------|---------------|
 |      |               |
 |      |               |
 |      |               |
