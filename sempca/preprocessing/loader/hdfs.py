@@ -3,6 +3,7 @@ import re
 
 from sempca.const import PROJECT_ROOT
 from sempca.preprocessing.loader import BasicDataLoader
+from sempca.preprocessing.loader.templates import hdfs_templates
 from sempca.utils import tqdm
 
 
@@ -27,37 +28,7 @@ class HDFSLoader(BasicDataLoader):
 
     def parse_by_Official(self):
         self._restore()
-        templates = [
-            "Adding an already existing block (.*)",
-            "(.*)Verification succeeded for (.*)",
-            "(.*) Served block (.*) to (.*)",
-            "(.*):Got exception while serving (.*) to (.*):(.*)",
-            "Receiving block (.*) src: (.*) dest: (.*)",
-            "Received block (.*) src: (.*) dest: (.*) of size ([-]?[0-9]+)",
-            "writeBlock (.*) received exception (.*)",
-            "PacketResponder ([-]?[0-9]+) for block (.*) Interrupted\.",
-            "Received block (.*) of size ([-]?[0-9]+) from (.*)",
-            "PacketResponder (.*) ([-]?[0-9]+) Exception (.*)",
-            "PacketResponder ([-]?[0-9]+) for block (.*) terminating",
-            "(.*):Exception writing block (.*) to mirror (.*)(.*)",
-            "Receiving empty packet for block (.*)",
-            "Exception in receiveBlock for block (.*) (.*)",
-            "Changing block file offset of block (.*) from ([-]?[0-9]+) to ([-]?[0-9]+) meta file offset to ([-]?[0-9]+)",
-            "(.*):Transmitted block (.*) to (.*)",
-            "(.*):Failed to transfer (.*) to (.*) got (.*)",
-            "(.*) Starting thread to transfer block (.*) to (.*)",
-            "Reopen Block (.*)",
-            "Unexpected error trying to delete block (.*)\. BlockInfo not found in volumeMap\.",
-            "Deleting block (.*) file (.*)",
-            "BLOCK\* NameSystem\.allocateBlock: (.*)\. (.*)",
-            "BLOCK\* NameSystem\.delete: (.*) is added to invalidSet of (.*)",
-            "BLOCK\* Removing block (.*) from neededReplications as it does not belong to any file\.",
-            "BLOCK\* ask (.*) to replicate (.*) to (.*)",
-            "BLOCK\* NameSystem\.addStoredBlock: blockMap updated: (.*) is added to (.*) size ([-]?[0-9]+)",
-            "BLOCK\* NameSystem\.addStoredBlock: Redundant addStoredBlock request received for (.*) on (.*) size ([-]?[0-9]+)",
-            "BLOCK\* NameSystem\.addStoredBlock: addStoredBlock request received for (.*) on (.*) size ([-]?[0-9]+) But it does not belong to any file\.",
-            "PendingReplicationMonitor timed out block (.*)",
-        ]
+        templates = hdfs_templates
         save_path = os.path.join(PROJECT_ROOT, "datasets/HDFS/persistences/official")
         if not os.path.exists(save_path):
             os.makedirs(save_path)
