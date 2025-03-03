@@ -62,7 +62,7 @@ def main():
     # Prepare Training, Validating and Testing instances.
     processor = Preprocessor()
     template_encoder = TemplateTfIdf()
-    train, dev, test = processor.process(
+    train, dev, test = processor.process_and_split(
         dataset=dataset,
         parsing=parser,
         template_encoding=template_encoder.present,

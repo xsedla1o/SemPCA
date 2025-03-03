@@ -20,12 +20,14 @@ class DataPaths:
     """
 
     dataset_name: str  # e.g., "HDFS", "BGL"
+    parser_name: str = "Drain"  # e.g., "Drain", "Official"
     in_file: Union[Path, str] = None
     project_root: Union[Path, str] = None
     label_file: Union[Path, str] = None
     drain_config: Union[Path, str] = None
     persistence_dir: Union[Path, str] = None
     dataset_dir: Union[Path, str] = None
+    processed_out_dir: Union[Path, str] = None
 
     # Dataset-specific paths (computed from dataset_name)
     official_dir: Path = field(init=False)
@@ -60,6 +62,10 @@ class DataPaths:
             self.label_file = self.dataset_dir / "label.txt"
 
         self.sequence_file = self.dataset_dir / "raw_log_seqs.txt"
+
+        self.processed_out_dir = self.to_path(self.processed_out_dir)
+        if self.processed_out_dir is None:
+            self.processed_out_dir = self.dataset_dir / "inputs" / self.parser_name
 
         self.persistence_dir = self.to_path(self.persistence_dir)
         if self.persistence_dir is None:
@@ -142,6 +148,7 @@ class BasicDataLoader:
         Load parsing results by Drain
         :return: Update templates, log2temp attributes in self.
         """
+        self.logger.info("Start parsing by Drain.")
         self._restore()
         if not os.path.exists(self.paths.drain_config):
             self.logger.error(

@@ -183,7 +183,7 @@ def main():
 
     processor = Preprocessor()
 
-    train, dev, test = processor.process(
+    train, dev, test = processor.process_and_split(
         dataset=dataset, parsing=parser, template_encoding=None, cut_func=cut_by_613
     )
     num_classes = len(processor.train_event2idx)

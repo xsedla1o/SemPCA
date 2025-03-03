@@ -111,6 +111,7 @@ class BGLLoader(BasicDataLoader):
         return " ".join(after_process)
 
     def parse_by_official(self):
+        self.logger.info("Start parsing by Official.")
         self._restore()
         # Define official templates
         templates = bgl_templates

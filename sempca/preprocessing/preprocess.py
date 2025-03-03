@@ -1,9 +1,8 @@
-import gc
 import os
+import sys
 from collections import Counter
 from typing import Type
 
-from sempca.const import PROJECT_ROOT
 from sempca.entities.instances import Instance
 from sempca.preprocessing import BGLLoader, HDFSLoader, SpiritLoader
 from sempca.preprocessing.loader.basic import DataPaths, BasicDataLoader
@@ -20,125 +19,88 @@ set2dataloader = {
 class Preprocessor:
     def __init__(self):
         self.logger = get_logger("Preprocessor")
-        self.dataloader = None
         self.train_event2idx = {}
         self.test_event2idx = {}
         self.id2label = {}
         self.label2id = {}
         self.templates = []
         self.embedding = None
-        self.base = None
         self.dataset = None
         self.parsing = None
         self.tag2id = {"Normal": 0, "Anomalous": 1}
         self.id2tag = {0: "Normal", 1: "Anomalous"}
 
-    def process(self, dataset, parsing, template_encoding, cut_func):
+    def process_and_split(self, dataset, parsing, template_encoding, cut_func):
         """
         Preprocess approach, log loading, parsing and cutting.
         Please be noted that if you want to add more datasets or parsers, you should modify here.
         :param dataset: Specified dataset
         :param parsing: Specified log parser, Drain now supported.
         :param template_encoding: Semantic representation functio for log templates.
-        :param cut_func: Curtting function for all instances.
+        :param cut_func: Cutting function for all instances.
         :return: Train, Dev and Test data in list of instances.
         """
+        self.paths = DataPaths(dataset_name=dataset, parser_name=parsing)
+        self.base = self.paths.processed_out_dir
 
-        self.base = os.path.join(
-            PROJECT_ROOT, "datasets/" + dataset + "/inputs/" + parsing
-        )
-        self.dataset = dataset
-        self.parsing = parsing
-        self.paths = DataPaths(dataset_name=dataset)
-
-        self.dataloader = self.get_dataloader(dataset)(
+        dataloader = self.get_dataloader(dataset)(
             self.paths, semantic_repr_func=template_encoding
         )
 
-        self.dataloader.parse(parsing)
-        return self._gen_instances(cut_func=cut_func)
+        dataloader.parse(parsing)
+        instances = self.generate_instances(dataloader)
+        return self._cut_instances(instances, cut_func=cut_func)
 
-    def get_dataloader(self, dataset: str) -> Type[BasicDataLoader]:
+    @staticmethod
+    def get_dataloader(dataset: str) -> Type[BasicDataLoader]:
         if dataset not in set2dataloader.keys():
-            self.logger.error("Dataset %s not supported." % dataset)
+            print("Dataset %s not supported." % dataset, file=sys.stderr)
             raise NotImplementedError
         return set2dataloader[dataset]
 
-    def process_no_split(self, dataset, parsing, template_encoding):
-        """
-        Preprocess approach, log loading, parsing and cutting.
-        Please be noted that if you want to add more datasets or parsers, you should modify here.
-        :param dataset: Specified dataset
-        :param parsing: Specified log parser, IBM(Drain) now supported.
-        :param template_encoding: Semantic representation functio for log templates.
-        :return: Train, Dev and Test data in list of instances.
-        """
-        self.base = os.path.join(
-            PROJECT_ROOT, "datasets/" + dataset + "/inputs/" + parsing
-        )
-        self.dataset = dataset
-        self.parsing = parsing
+    def _cut_instances(self, instances, cut_func=None):
+        os.makedirs(self.base, exist_ok=True)
 
-        self.get_dataloader(dataset)
-        self.dataloader.parse(parsing)
+        train_file = self.base / "train"
+        dev_file = self.base / "dev"
+        test_file = self.base / "test"
 
-        self.logger.info("Start generating instances.")
-        instances = []
-        # Prepare semantic embedding sequences for instances.
-        for block in tqdm(self.dataloader.blocks):
-            if (
-                block in self.dataloader.block2eventseq.keys()
-                and block in self.dataloader.block2label.keys()
-            ):
-                id = block
-                label = self.dataloader.block2label[id]
-                inst = Instance(id, self.dataloader.block2eventseq[id], label)
-                instances.append(inst)
-            else:
-                self.logger.error("Found mismatch block: %s. Please check." % block)
-        self.update_dicts()
-        self.embedding = self.dataloader.id2embed
-        return instances
-
-    def _gen_instances(self, cut_func=None):
-        self.logger.info(
-            "Start preprocessing dataset %s by parsing method %s"
-            % (self.dataset, self.parsing)
-        )
-        instances = []
-        if not os.path.exists(self.base):
-            os.makedirs(self.base)
-        train_file = os.path.join(self.base, "train")
-        dev_file = os.path.join(self.base, "dev")
-        test_file = os.path.join(self.base, "test")
-
-        self.logger.info("Start generating instances.")
-        # Prepare semantic embedding sequences for instances.
-        for block in tqdm(self.dataloader.blocks):
-            if (
-                block in self.dataloader.block2eventseq.keys()
-                and block in self.dataloader.block2label.keys()
-            ):
-                id = block
-                label = self.dataloader.block2label[id]
-                inst = Instance(id, self.dataloader.block2eventseq[id], label)
-                instances.append(inst)
-            else:
-                self.logger.error("Found mismatch block: %s. Please check." % block)
-        self.embedding = self.dataloader.id2embed
         train, dev, test = cut_func(instances)
+
         self.label_distribution(train, dev, test)
         self.record_files(train, train_file, dev, dev_file, test, test_file)
-        self.update_dicts()
         self.update_event2idx_mapping(train, test)
-        del self.dataloader
-        gc.collect()
+
         return train, dev, test
 
-    def update_dicts(self):
-        self.id2label = self.dataloader.id2label
-        self.label2id = self.dataloader.label2id
-        self.templates = self.dataloader.templates
+    def generate_instances(self, dataloader):
+        """
+        Generate instances from DataLoader object.
+
+        :param dataloader: Initialized DataLoader object that has parsed the log data.
+        :return: list of Instances
+        """
+        instances = []
+        self.logger.info("Start generating instances.")
+        # Prepare semantic embedding sequences for instances.
+        for block in tqdm(dataloader.blocks):
+            if (
+                block in dataloader.block2eventseq.keys()
+                and block in dataloader.block2label.keys()
+            ):
+                id = block
+                label = dataloader.block2label[id]
+                inst = Instance(id, dataloader.block2eventseq[id], label)
+                instances.append(inst)
+            else:
+                self.logger.error("Found mismatch block: %s. Please check." % block)
+
+        self.id2label = dataloader.id2label
+        self.label2id = dataloader.label2id
+        self.templates = dataloader.templates
+        self.embedding = dataloader.id2embed
+
+        return instances
 
     def record_files(
         self, train, train_file, dev, dev_file, test, test_file, pretrain_source=None
@@ -221,7 +183,7 @@ if __name__ == "__main__":
 
     processor = Preprocessor()
     template_encoder = TemplateTfIdf()
-    processor.process(
+    processor.process_and_split(
         dataset="Spirit",
         parsing="Drain",
         template_encoding=template_encoder.present,

@@ -45,7 +45,7 @@ def main():
     template_encoder = TemplateTfIdf()
 
     preprocessor = Preprocessor()
-    train, _, test = preprocessor.process(
+    train, _, test = preprocessor.process_and_split(
         dataset=dataset,
         parsing=parser,
         template_encoding=template_encoder.present,

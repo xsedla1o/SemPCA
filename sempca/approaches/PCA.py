@@ -39,7 +39,7 @@ def main():
     anomaly_threshold = args.threshold
 
     processor = Preprocessor()
-    train, _, test = processor.process(
+    train, _, test = processor.process_and_split(
         dataset=dataset, parsing=parser, template_encoding=None, cut_func=cut_by_613
     )
     train_inputs = []

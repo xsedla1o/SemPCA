@@ -86,7 +86,7 @@ def main():
 
     # Training, Validating and Testing instances.
     processor = Preprocessor()
-    train, dev, test = processor.process(
+    train, dev, test = processor.process_and_split(
         dataset=dataset,
         parsing=parser,
         cut_func=cut_by_613,

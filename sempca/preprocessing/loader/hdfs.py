@@ -18,7 +18,8 @@ class HDFSLoader(BasicDataLoader):
         self._load_raw_log_seqs()
         self._load_hdfs_labels()
 
-    def parse_by_Official(self):
+    def parse_by_official(self):
+        self.logger.info("Start parsing by Official.")
         self._restore()
         templates = hdfs_templates
 
