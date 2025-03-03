@@ -1,12 +1,13 @@
 import hashlib
 from collections import Counter
+from typing import List
 
 
 class Instance:
-    def __init__(self, block_id, log_sequence, label):
-        self.id = block_id
-        self.sequence = log_sequence
-        self.label = label
+    def __init__(self, block_id: str, log_sequence: List[int], label: str):
+        self.id: str = block_id
+        self.sequence: List[int] = log_sequence
+        self.label: str = label
         self.repr = None
         self.predicted = ""
         self.confidence = 0

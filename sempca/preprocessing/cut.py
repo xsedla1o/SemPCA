@@ -1,9 +1,11 @@
 import math
 import random
+from typing import List, Tuple
 
 import numpy as np
 
 from sempca.const import seed
+from sempca.entities import Instance
 
 
 def cut_by_82_with_shuffle(instances):
@@ -26,7 +28,9 @@ def cut_by_82_with_shuffle(instances):
     return train, None, test
 
 
-def cut_by_613(instances):
+def cut_by_613(
+    instances: List[Instance],
+) -> Tuple[List[Instance], List[Instance], List[Instance]]:
     """
     Experimental Setting according to PLELog.
     Parameters
