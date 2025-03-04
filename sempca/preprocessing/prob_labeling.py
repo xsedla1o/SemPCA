@@ -51,7 +51,7 @@ class ProbabilisticLabeling:
             labeled_inst = instances
         else:
             inputs = [inst.repr for inst in instances]
-            inputs = np.asarray(inputs, dtype=np.float)
+            inputs = np.asarray(inputs, dtype=float)
             ground_truth = [inst.label for inst in instances]
 
             # 模型给出的原始簇id
