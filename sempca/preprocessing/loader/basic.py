@@ -152,7 +152,7 @@ class BasicDataLoader:
         self._restore()
         if not os.path.exists(self.paths.drain_config):
             self.logger.error(
-                "Drain config file {} not found.", self.paths.drain_config
+                "Drain config file %s not found.", self.paths.drain_config
             )
             exit(1)
         parser = Drain3Parser(self.paths.drain_config, self.paths.persistence_dir)
