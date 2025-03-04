@@ -73,7 +73,7 @@ class Preprocessor:
 
         return train, dev, test
 
-    def generate_instances(self, dataloader):
+    def generate_instances(self, dataloader, drop_ids=None):
         """
         Generate instances from DataLoader object.
 
@@ -90,7 +90,8 @@ class Preprocessor:
             ):
                 id = block
                 label = dataloader.block2label[id]
-                inst = Instance(id, dataloader.block2eventseq[id], label)
+                eventseq = [x for x in dataloader.block2eventseq[id] if x not in drop_ids]
+                inst = Instance(id, eventseq, label)
                 instances.append(inst)
             else:
                 self.logger.error("Found mismatch block: %s. Please check." % block)
