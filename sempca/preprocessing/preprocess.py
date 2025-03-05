@@ -1,7 +1,7 @@
 import os
 import sys
 from collections import Counter
-from typing import Type
+from typing import Type, Optional
 
 from sempca.entities.instances import Instance
 from sempca.preprocessing import BGLLoader, HDFSLoader, SpiritLoader
@@ -73,13 +73,15 @@ class Preprocessor:
 
         return train, dev, test
 
-    def generate_instances(self, dataloader, drop_ids=None):
+    def generate_instances(self, dataloader, drop_ids: Optional[set] = None):
         """
         Generate instances from DataLoader object.
 
         :param dataloader: Initialized DataLoader object that has parsed the log data.
         :return: list of Instances
         """
+        if drop_ids is None:
+            drop_ids = set()
         instances = []
         self.logger.info("Start generating instances.")
         # Prepare semantic embedding sequences for instances.
