@@ -100,16 +100,13 @@ class PCA:
         assert self.proj_C is not None, (
             "PCA model needs to be trained before prediction."
         )
-        y_pred = np.zeros(X.shape[0])
-        for i in range(X.shape[0]):
-            y_a = np.dot(self.proj_C, X[i, :])
-            SPE = np.dot(y_a, y_a)
-            if fixed_threshold is not None and fixed_threshold != -1.0:
-                self.fixed_threshold = fixed_threshold
-            else:
-                self.fixed_threshold = self.threshold
-            if SPE > self.fixed_threshold:
-                y_pred[i] = 1
+        if fixed_threshold is not None and fixed_threshold != -1.0:
+            self.fixed_threshold = fixed_threshold
+        else:
+            self.fixed_threshold = self.threshold
+
+        SPE: np.ndarray[float] = np.sum(np.dot(self.proj_C, X.T) ** 2, axis=0)
+        y_pred = (SPE > self.fixed_threshold).astype(int)
         return y_pred
 
     def evaluate(self, X, y_true, fixed_threshold=None):
