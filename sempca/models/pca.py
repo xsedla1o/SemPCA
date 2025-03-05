@@ -66,8 +66,8 @@ class PCA:
             for i in range(num_events):
                 variance += sigma[i]
                 if variance / total_variance >= n_components:
+                    n_components = i + 1
                     break
-            n_components = i + 1
 
         P = U[:, :n_components]
         I = np.identity(num_events, int)
