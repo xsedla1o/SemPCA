@@ -17,6 +17,8 @@ from sempca.utils import metrics, get_logger
 
 
 class PCA:
+    logger = get_logger("PCA")
+
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
         """The PCA model for anomaly detection
 
@@ -38,7 +40,6 @@ class PCA:
                 c_alpha = 3.8906;  # alpha = 0.0001
                 c_alpha = 4.4172;  # alpha = 0.00001
         """
-        self.logger = get_logger("PCA")
 
         self.proj_C = None
         self.components = None
@@ -147,6 +148,7 @@ class PCA:
 
 
 class PCAPlusPlus(PCA):
+    logger = get_logger("PCAPlusPlus")
+
     def __init__(self, n_components=0.95, threshold=None, c_alpha=3.2905):
         super(PCAPlusPlus, self).__init__(n_components, threshold, c_alpha)
-        self.logger = get_logger("PCAPlusPlus")
