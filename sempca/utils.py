@@ -415,22 +415,23 @@ def get_logger(name, file: Union[bool, str] = True):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
-        f"{SESSION} - %(asctime)s - %(name)s - %(levelname)s: %(message)s"
+        f"{SESSION} %(asctime)s %(name)s %(levelname)s: %(message)s"
     )
 
     # Log to file
     if file:
         if isinstance(file, bool):
-            file = f"{name}.log"
+            file = f"{SESSION}.log"
         else:
             assert isinstance(file, str), "file must be a string or boolean"
             if not file.endswith(".log"):
                 file += ".log"
 
-        fh = logging.FileHandler(os.path.join(LOG_ROOT, file))
-        fh.setLevel(logging.INFO)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+        if not any(isinstance(handler, logging.FileHandler) and handler.baseFilename.endswith(file) for handler in logger.handlers):
+            fh = logging.FileHandler(os.path.join(LOG_ROOT, file))
+            fh.setLevel(logging.INFO)
+            fh.setFormatter(formatter)
+            logger.addHandler(fh)
 
     # Log to console
     ch = logging.StreamHandler(sys.stderr)
