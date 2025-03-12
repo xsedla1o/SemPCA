@@ -26,9 +26,11 @@ class DataPaths:
     label_file: Union[Path, str] = None
     drain_config: Union[Path, str] = None
     persistence_dir: Union[Path, str] = None
+    datasets_dir: Union[Path, str] = None
     dataset_dir: Union[Path, str] = None
     processed_out_dir: Union[Path, str] = None
 
+    word2vec_file: Path = field(init=False)
     # Dataset-specific paths (computed from dataset_name)
     official_dir: Path = field(init=False)
     templates_file: Path = field(init=False)
@@ -48,10 +50,17 @@ class DataPaths:
         if self.project_root is None:
             self.project_root = Path(PROJECT_ROOT)
 
+        self.datasets_dir = self.to_path(self.datasets_dir)
+        if self.datasets_dir is None:
+            self.datasets_dir = self.project_root / "datasets"
+
+        # Set default word2vec file
+        self.word2vec_file = self.datasets_dir / "glove.6B.300d.txt"
+
         # Compute dataset-specific paths using the dataset_name
         self.dataset_dir = self.to_path(self.dataset_dir)
         if self.dataset_dir is None:
-            self.dataset_dir = self.project_root / "datasets" / self.dataset_name
+            self.dataset_dir = self.datasets_dir / self.dataset_name
 
         self.in_file = self.to_path(self.in_file)
         if self.in_file is None:
