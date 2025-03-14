@@ -427,14 +427,18 @@ def get_logger(name, file: Union[bool, str] = True):
             if not file.endswith(".log"):
                 file += ".log"
 
-        if not any(isinstance(handler, logging.FileHandler) and handler.baseFilename.endswith(file) for handler in logger.handlers):
+        if not any(
+            isinstance(handler, logging.FileHandler)
+            and handler.baseFilename.endswith(file)
+            for handler in logger.handlers
+        ):
             fh = logging.FileHandler(os.path.join(LOG_ROOT, file))
             fh.setLevel(logging.INFO)
             fh.setFormatter(formatter)
             logger.addHandler(fh)
 
     # Log to console
-    ch = logging.StreamHandler(sys.stderr)
+    ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.DEBUG)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
