@@ -24,8 +24,9 @@ from sempca.utils import (
 
 
 class AttLSTMModel(nn.Module):
+    logger = get_logger("AttLSTM")
+
     def __init__(self, vocab, lstm_layers, lstm_hiddens, dropout, device):
-        self.logger = get_logger("AttLSTM")
         super(AttLSTMModel, self).__init__()
         self.dropout = dropout
         self.logger.info("==== Model Parameters ====")
@@ -87,8 +88,9 @@ class AttLSTMModel(nn.Module):
 
 
 class DualLSTM(nn.Module):
+    logger = get_logger("DualLSTM")
+
     def __init__(self, vocab, lstm_hiddens, num_classes, dropout, device):
-        self.logger = get_logger("DualLSTM")
         super(DualLSTM, self).__init__()
         self.dropout = dropout
         self.logger.info("==== Model Parameters ====")
@@ -140,9 +142,9 @@ class DualLSTM(nn.Module):
 
 
 class LogAnomaly:
-    def __init__(self, vocab, hidden, num_classes, device):
-        self.logger = get_logger("LogAnomaly")
+    logger = get_logger("LogAnomaly")
 
+    def __init__(self, vocab, hidden, num_classes, device):
         self.vocab = vocab
         self.hidden_size = hidden
         self.batch_size = 128
@@ -563,9 +565,9 @@ class DeepLog(nn.Module):
 
 
 class LogRobust:
-    def __init__(self, vocab, hidden, layer, device):
-        self.logger = get_logger("LogRobust")
+    logger = get_logger("LogRobust")
 
+    def __init__(self, vocab, hidden, layer, device):
         self.vocab = vocab
         self.id2tag = {0: "Normal", 1: "Anomalous"}
         self.hidden_size = hidden
@@ -637,12 +639,13 @@ class LogRobust:
 
 
 class PLELog:
+    logger = get_logger("PLELog")
+
     def __init__(self, embedding, num_layer, hidden_size, label2id):
         assert isinstance(embedding, np.ndarray)
         self.label2id = label2id
         self.tag2id = {"Normal": 0, "Anomalous": 1}
         self.id2tag = {0: "Normal", 1: "Anomalous"}
-        self.logger = get_logger("PLELog")
         self.embedding = embedding
         self.num_layer = num_layer
         self.hidden_size = hidden_size
