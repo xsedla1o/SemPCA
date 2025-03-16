@@ -69,8 +69,11 @@ class CPUEmbedding(nn.Module):
         else:
             try:
                 output = F.embedding(input, self.weight, self.padding_idx)
-            except IndexError:
+            except IndexError as e:
                 print(input)
+                print(self.weight.shape, self.padding_idx)
+                print(torch.max(input), torch.min(input))
+                raise e
             return output
 
     def extra_repr(self):
