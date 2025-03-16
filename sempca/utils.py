@@ -1,6 +1,7 @@
 import logging
 import os.path
 import sys
+import time
 from typing import Union
 
 import numpy as np
@@ -349,7 +350,7 @@ def summarize_subsequences(instances, window_size, step_size=1):
 
 
 def update_instances(train=None, test=None):
-    index = 0
+    index = 4  # See vocab.Vocab special embedding positions
     mapper = dict()
     for inst in train:
         for x in inst.sequence:
