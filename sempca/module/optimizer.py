@@ -8,11 +8,13 @@ def lr_lambda(epoch, decay, decay_step):
 
 
 class Optimizer:
-    def __init__(self, parameter, lr=2e-3):
+    def __init__(self, parameter, lr=2e-3, lr_decay=0.75, lr_decay_step=1000):
         self.optim = torch.optim.Adam(parameter, lr=lr, betas=(0.9, 0.9), eps=1e-12)
         self.scheduler = torch.optim.lr_scheduler.LambdaLR(
             self.optim,
-            lr_lambda=functools.partial(lr_lambda, decay=0.75, decay_step=1000),
+            lr_lambda=functools.partial(
+                lr_lambda, decay=lr_decay, decay_step=lr_decay_step
+            ),
         )
 
     def step(self):
