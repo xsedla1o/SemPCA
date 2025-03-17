@@ -381,6 +381,14 @@ def update_instances(train=None, test=None):
     return train, test, mapper
 
 
+class MockProgressBar:
+    def update(self, n=1):
+        pass
+
+    def close(self):
+        pass
+
+
 def tqdm(
     iterable=None, desc="", total=None, unit="it", ncols=None, leave=True, **kwargs
 ):
@@ -397,7 +405,9 @@ def tqdm(
             leave=leave,
             **kwargs,
         )
-    return iterable
+    if iterable is not None:
+        return iterable
+    return MockProgressBar()
 
 
 def get_logger(name, file: Union[bool, str] = True):
