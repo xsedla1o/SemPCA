@@ -92,7 +92,9 @@ class Preprocessor:
             ):
                 id = block
                 label = dataloader.block2label[id]
-                eventseq = [x for x in dataloader.block2eventseq[id] if x not in drop_ids]
+                eventseq = [
+                    x for x in dataloader.block2eventseq[id] if x not in drop_ids
+                ]
                 inst = Instance(id, eventseq, label)
                 instances.append(inst)
             else:

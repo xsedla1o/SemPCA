@@ -34,7 +34,7 @@ def generate_inputs_by_instances(instances, window, step=1):
     for inst in instances:
         if inst.label == "Normal":
             num_sessions += 1
-            event_list = tuple(map(lambda n: n, map(int, inst.sequence)))
+            event_list = tuple(map(int, inst.sequence))
             for i in range(0, len(event_list) - window, step):
                 inputs.append(event_list[i : i + window])
                 outputs.append(event_list[i + window])
@@ -217,9 +217,7 @@ def main():
 
     model = DeepLog(input_size, hidden_size, num_layers, num_classes).to(device)
 
-    # Randomly sample 50% of normal log sequences for training.
     train = list(filter(lambda x: x.label == "Normal", train))
-    # train = random.sample(train, int(0.5 * len(train)))
 
     if mode == "train":
         train_dataset = generate_inputs_by_instances(train, window=window_size)
