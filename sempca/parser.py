@@ -34,7 +34,6 @@ class Drain3Parser:
             os.makedirs(persistence_folder)
         persistence_file = os.path.join(persistence_folder, "persistence")
         self.logger.info("Searching for target persistence file %s" % persistence_file)
-        persistence_file = os.path.join(persistence_folder, persistence_file)
         fp = FilePersistence(persistence_file)
         self.parser = TemplateMiner(persistence_handler=fp, config=self.config)
         self.load("File", persistence_file)
