@@ -40,12 +40,12 @@ class Drain3Parser:
 
     def parse_file(self, in_file, remove_cols=None, clean=False, encode="utf-8"):
         self.logger.info("Start parsing input file %s" % in_file)
-        with open(in_file, "r", encoding=encode) as reader:
+        with open(in_file, "r", encoding=encode, errors="ignore") as reader:
             if remove_cols:
                 self.logger.info(
                     "Removing columns: [%s]" % (" ".join([str(x) for x in remove_cols]))
                 )
-            for line in tqdm(reader.readlines()):
+            for line in tqdm(reader):
                 line = line.strip()
                 # In case some of the columns are useless.
                 if remove_cols:

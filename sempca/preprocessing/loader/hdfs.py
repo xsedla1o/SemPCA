@@ -1,10 +1,21 @@
 import os
 import re
+from functools import partial
+from typing import Callable
 
 from sempca.preprocessing.loader import BasicDataLoader
 from sempca.preprocessing.loader.basic import DataPaths
 from sempca.preprocessing.loader.templates import hdfs_templates
 from sempca.utils import tqdm
+
+
+def _pre_process(line, remove_cols):
+    tokens = line.strip().split()
+    after_process = []
+    for id, token in enumerate(tokens):
+        if id not in remove_cols:
+            after_process.append(token)
+    return " ".join(after_process)
 
 
 class HDFSLoader(BasicDataLoader):
@@ -15,6 +26,7 @@ class HDFSLoader(BasicDataLoader):
             self.logger.error("Input file not found, please check.")
             exit(1)
         self.remove_cols = [0, 1, 2, 3, 4]
+        self._pre_process = self.get_preprocessor()
         self._load_raw_log_seqs()
         self._load_hdfs_labels()
 
@@ -45,7 +57,7 @@ class HDFSLoader(BasicDataLoader):
                 self.templates[id] = template
             with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 log_id = 0
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     line = line.strip()
                     if self.remove_cols:
                         processed_line = self._pre_process(line)
@@ -82,6 +94,9 @@ class HDFSLoader(BasicDataLoader):
                 self._save_log_event_seqs(writer)
         self._prepare_semantic_embed(self.paths.semantic_vector_file)
 
+    def get_preprocessor(self) -> Callable[[str], str]:
+        return partial(_pre_process, remove_cols=self.remove_cols)
+
     def _pre_process(self, line):
         tokens = line.strip().split()
         after_process = []
@@ -100,7 +115,7 @@ class HDFSLoader(BasicDataLoader):
             self.logger.info("Start extract log sequences from HDFS raw log file.")
             with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 log_id = 0
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     processed_line = self._pre_process(line)
                     block_ids = set(re.findall(self.blk_rex, processed_line))
                     if len(block_ids) == 0:
@@ -136,7 +151,7 @@ class HDFSLoader(BasicDataLoader):
                 "Start load from previous extraction. File path %s" % sequence_file
             )
             with open(sequence_file, "r", encoding="utf-8") as reader:
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     tokens = line.strip().split(":")
                     block = tokens[0]
                     seq = tokens[1].split()
@@ -149,7 +164,7 @@ class HDFSLoader(BasicDataLoader):
 
     def _load_hdfs_labels(self):
         with open(self.paths.label_file, "r", encoding="utf-8") as reader:
-            for line in reader.readlines():
+            for line in reader:
                 token = line.strip().split(",")
                 block = token[0]
                 label = self.id2label[int(token[1])]

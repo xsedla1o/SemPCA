@@ -2,7 +2,7 @@ import os
 import re
 from collections import OrderedDict
 from functools import partial
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Callable
 
 import numpy as np
 import pandas as pd
@@ -50,6 +50,15 @@ line_lengths = [
 ]
 
 
+def _pre_process(line, remove_cols):
+    tokens = line.strip().split()
+    after_process = []
+    for id, token in enumerate(tokens):
+        if id not in remove_cols:
+            after_process.append(token)
+    return " ".join(after_process)
+
+
 class BGLLoader(BasicDataLoader):
     def __init__(
         self,
@@ -73,6 +82,7 @@ class BGLLoader(BasicDataLoader):
         semantic_repr_func: semantic representation function
         """
         super(BGLLoader, self).__init__(paths, semantic_repr_func)
+        self._dataset_lines = None
 
         assert isinstance(win_secs, int) or isinstance(win_lines, int), (
             "At least one of win_secs and win_lines should be an integer."
@@ -98,17 +108,11 @@ class BGLLoader(BasicDataLoader):
         self.win_kind = win_kind
         self.win_step = win_step
 
+        self._pre_process = self.get_preprocessor()
         self._load_raw_log_seqs()
 
-        self._dataset_lines = None
-
-    def _pre_process(self, line):
-        tokens = line.strip().split()
-        after_process = []
-        for id, token in enumerate(tokens):
-            if id not in self.remove_cols:
-                after_process.append(token)
-        return " ".join(after_process)
+    def get_preprocessor(self) -> Callable[[str], str]:
+        return partial(_pre_process, remove_cols=self.remove_cols)
 
     def parse_by_official(self):
         self.logger.info("Start parsing by Official.")
@@ -124,14 +128,14 @@ class BGLLoader(BasicDataLoader):
                 "Found parsing result, please note that this does not guarantee a smooth execution."
             )
             with open(templates_file, "r", encoding="utf-8") as reader:
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     tokens = line.strip().split(",")
                     id = int(tokens[0])
                     template = ",".join(tokens[1:])
                     self.templates[id] = template
 
             with open(log2temp_file, "r", encoding="utf-8") as reader:
-                for line in reader.readlines():
+                for line in reader:
                     logid, tempid = line.strip().split(",")
                     self.log2temp[int(logid)] = int(tempid)
 
@@ -140,7 +144,7 @@ class BGLLoader(BasicDataLoader):
                 self.templates[id] = template
             with open(self.paths.in_file, "r", encoding="utf-8") as reader:
                 log_id = 0
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     line = line.strip()
                     if self.remove_cols:
                         processed_line = self._pre_process(line)
@@ -192,7 +196,7 @@ class BGLLoader(BasicDataLoader):
                 "Start load from previous extraction. File path %s" % sequence_file
             )
             with open(sequence_file, "r", encoding="utf-8") as reader:
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     tokens = line.strip().rsplit(":", maxsplit=1)
                     block = tokens[0]
                     seq = tokens[1].split()
@@ -201,13 +205,15 @@ class BGLLoader(BasicDataLoader):
                         self.blocks.append(block)
                     self.block2seqs[block] = [int(x) for x in seq]
             with open(label_file, "r", encoding="utf-8") as reader:
-                for line in reader.readlines():
+                for line in reader:
                     block_id, label = line.strip().rsplit(":", maxsplit=1)
                     self.block2label[block_id] = label
 
         else:
             self.logger.info("Start loading BGL log sequences.")
-            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
+            with open(
+                self.paths.in_file, "r", encoding="utf-8", errors="ignore"
+            ) as reader:
                 nodes = self._component_grouping(reader)
 
                 if self.win_kind == "tumbling":
@@ -243,8 +249,7 @@ class BGLLoader(BasicDataLoader):
                 nodes[node].append((idx, line.strip()))
             self._dataset_lines = nodes[node][-1][0] + 1
         else:
-            nodes[""] = [(idx, line.strip()) for idx, line in enumerate(reader)]
-            self._dataset_lines = nodes[""][-1][0] + 1
+            nodes[""] = ((idx, line.strip()) for idx, line in enumerate(reader))
         return nodes
 
     @staticmethod

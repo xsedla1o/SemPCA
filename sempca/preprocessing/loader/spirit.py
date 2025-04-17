@@ -2,10 +2,24 @@ import datetime
 import os
 import re
 from collections import OrderedDict
+from functools import partial
+from typing import Callable
 
 from sempca.const import PROJECT_ROOT
 from sempca.preprocessing.loader import BasicDataLoader, DataPaths
 from sempca.utils import tqdm
+
+
+def _pre_process(line, remove_cols, find_res, replace_res):
+    tokens = line.strip().split()
+    after_process = []
+    for id, token in enumerate(tokens):
+        if id not in remove_cols:
+            after_process.append(token)
+    processed_line = " ".join(after_process)
+    for regex, replace in zip(find_res, replace_res):
+        processed_line = re.sub(regex, replace, processed_line)
+    return processed_line
 
 
 class SpiritLoader(BasicDataLoader):
@@ -35,16 +49,13 @@ class SpiritLoader(BasicDataLoader):
             raise FileNotFoundError
         self._load_raw_log_seqs()
 
-    def _pre_process(self, line):
-        tokens = line.strip().split()
-        after_process = []
-        for id, token in enumerate(tokens):
-            if id not in self.remove_cols:
-                after_process.append(token)
-        processed_line = " ".join(after_process)
-        for regex, replace in zip(self.regs["reg"], self.regs["replace"]):
-            processed_line = re.sub(regex, replace, processed_line)
-        return processed_line
+    def get_preprocessor(self) -> Callable[[str], str]:
+        return partial(
+            _pre_process,
+            remove_cols=self.remove_cols,
+            find_res=self.regs["reg"],
+            replace_res=self.regs["replace"],
+        )
 
     def _load_raw_log_seqs(self):
         sequence_file = self.paths.sequence_file
@@ -54,7 +65,7 @@ class SpiritLoader(BasicDataLoader):
                 "Start load from previous extraction. File path %s" % sequence_file
             )
             with open(sequence_file, "r", encoding="utf-8") as reader:
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     tokens = line.strip().split(":")
                     block = tokens[0]
                     seq = tokens[1].split()
@@ -63,7 +74,7 @@ class SpiritLoader(BasicDataLoader):
                         self.blocks.append(block)
                     self.block2seqs[block] = [int(x) for x in seq]
             with open(label_file, "r", encoding="utf-8") as reader:
-                for line in reader.readlines():
+                for line in reader:
                     block_id, label = line.strip().split(":")
                     self.block2label[block_id] = label
 
@@ -84,9 +95,10 @@ class SpiritLoader(BasicDataLoader):
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
 
+        preprocessor = self.get_preprocessor()
         with open(self.paths.in_file, "r", encoding="iso-8859-1") as reader:
             line_num = 0
-            for line in reader.readlines():
+            for line in reader:
                 line = line.strip()
                 if line == "":
                     line_num += 1
@@ -96,7 +108,7 @@ class SpiritLoader(BasicDataLoader):
                 prefix = tokens[0]
                 node = tokens[3]
                 datetime_str = tokens[2] + " " + tokens[6]
-                line = self._pre_process(line)
+                line = preprocessor(line)
                 writer.write(line + "\n")
                 dt = datetime.datetime.strptime(datetime_str, "%Y.%m.%d %H:%M:%S")
                 if node not in nodes.keys():
@@ -157,9 +169,10 @@ class SpiritLoader(BasicDataLoader):
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
 
+        preprocessor = self.get_preprocessor()
         with open(self.paths.in_file, "r", encoding="iso-8859-1") as reader:
             line_num = 0
-            for line in reader.readlines():
+            for line in reader:
                 line = line.strip()
                 if line == "":
                     line_num += 1
@@ -168,7 +181,7 @@ class SpiritLoader(BasicDataLoader):
                 tokens = line.split()
                 prefix = tokens[0]
                 datetime_str = tokens[2] + " " + tokens[6]
-                line = self._pre_process(line)
+                line = preprocessor(line)
                 writer.write(line + "\n")
                 dt = datetime.datetime.strptime(datetime_str, "%Y.%m.%d %H:%M:%S")
                 summarized_lines.append([line_num, prefix, dt])
@@ -220,9 +233,10 @@ class SpiritLoader(BasicDataLoader):
         # Prepare a clean log file for parsing
         writer = open(self.file_for_parsing, "w", encoding="utf-8")
 
+        preprocessor = self.get_preprocessor()
         with open(self.paths.in_file, "r", encoding="iso-8859-1") as reader:
             line_num = 0
-            for line in reader.readlines():
+            for line in reader:
                 line = line.strip()
                 if line == "":
                     line_num += 1
@@ -231,7 +245,7 @@ class SpiritLoader(BasicDataLoader):
                 tokens = line.split()
                 prefix = tokens[0]
                 datetime_str = tokens[2] + " " + tokens[6]
-                line = self._pre_process(line)
+                line = preprocessor(line)
                 writer.write(line + "\n")
                 dt = datetime.datetime.strptime(datetime_str, "%Y.%m.%d %H:%M:%S")
                 summarized_lines.append([line_num, prefix, dt])

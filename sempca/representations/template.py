@@ -50,7 +50,7 @@ class TemplateTfIdf:
         embed_file = os.path.join(PROJECT_ROOT, "datasets/glove.6B.300d.txt")
         if os.path.exists(embed_file):
             with open(embed_file, "r", encoding="utf-8") as reader:
-                for line in tqdm(reader.readlines()):
+                for line in tqdm(reader):
                     tokens = line.strip().split()
                     word = tokens[0]
                     embed = np.asarray(tokens[1:], dtype=float)

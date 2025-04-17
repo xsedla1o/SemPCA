@@ -1,12 +1,15 @@
 import abc
 import os
+import sys
 import time
 from dataclasses import dataclass, field
-from multiprocessing import Manager, Pool
+from functools import partial
+from multiprocessing import Pool
 from pathlib import Path
-from typing import Union
+from typing import Union, Callable
 
 import numpy as np
+from tqdm import tqdm as tqdm_original
 
 from sempca.const import PROJECT_ROOT
 from sempca.parser import Drain3Parser
@@ -92,13 +95,36 @@ class DataPaths:
             self.drain_config = self.project_root / "conf" / f"{self.dataset_name}.ini"
 
 
-def _async_parsing(parser, lines, log2temp):
-    for id, line in lines:
-        cluster = parser.match(line)
-        if not cluster:
-            print(line)
-            continue
-        log2temp[id] = cluster.cluster_id
+if hasattr(sys.stdout, "isatty") and sys.stdout.isatty():
+    tqdm_write = tqdm_original.write
+else:
+    tqdm_write = print
+
+
+def worker_parse(parser_instance, pre_process_func, log_id_line_tuple):
+    log_id, line_content = log_id_line_tuple
+    try:
+        processed_line = pre_process_func(line_content)
+        cluster = parser_instance.match(processed_line)
+        if cluster:
+            return log_id, cluster.cluster_id
+        else:
+            tqdm_write(
+                f"Warning: No match for log ID {log_id}, line: {line_content[:150]}..."
+            )
+    except Exception as e:
+        tqdm_write(f"ERROR parsing line {log_id}, {line_content}: {e}")
+    return None
+
+
+def read_nonempty_lines(filepath, encoding):
+    with open(filepath, "r", encoding=encoding, errors="ignore") as reader:
+        tqdm_reader = tqdm(reader, desc="Reading and Preprocessing")
+        for log_id, line in enumerate(tqdm_reader):
+            line = line.strip()
+            if line == "":
+                continue
+            yield log_id, line
 
 
 class BasicDataLoader:
@@ -129,8 +155,10 @@ class BasicDataLoader:
         return
 
     @abc.abstractmethod
-    def _pre_process(self, line):
-        return
+    def get_preprocessor(self) -> Callable[[str], str]:
+        """
+        :return: A callable function to preprocess log lines.
+        """
 
     def parse(self, parsing_method: str):
         """
@@ -197,46 +225,50 @@ class BasicDataLoader:
             self.load_parsing_results(log_template_mapping_file)
 
         else:
-            # parsing results not found, or somehow missing.
             self.logger.info(
                 "Missing persistence file(s), start with a full parsing process."
             )
+            parse_time = time.time()
             self.logger.warning(
                 "If you don't want this to happen, please copy persistence files from somewhere else and put it in %s"
                 % persistence_folder
             )
-            ori_lines = []
-            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
-                log_id = 0
-                for line in tqdm(reader.readlines()):
-                    line = line.strip()
-                    if line.strip() == "":
-                        log_id += 1
-                        continue
-                    processed_line = self._pre_process(line)
-                    ori_lines.append((log_id, processed_line))
-                    log_id += 1
-            self.logger.info("Parsing raw log....")
-            if core_jobs:
-                m = Manager()
-                log2temp = m.dict()
+            if core_jobs and core_jobs > 1:
                 pool = Pool(core_jobs)
-                splitted_lines = self._split(ori_lines, core_jobs)
-                inputs = zip(
-                    [parser] * core_jobs, splitted_lines, [log2temp] * core_jobs
+
+                pre_process_func = self.get_preprocessor()
+                worker_parse_init = partial(worker_parse, parser, pre_process_func)
+                lines = read_nonempty_lines(self.paths.in_file, encode)
+
+                chunk_size = 8192
+                results_iterator = pool.imap_unordered(
+                    worker_parse_init, lines, chunksize=chunk_size
                 )
-                pool.starmap(_async_parsing, inputs)
+                self.log2temp = {}
+                for result in results_iterator:
+                    if result is not None:
+                        log_id, template_id = result
+                        self.log2temp[log_id] = template_id
                 pool.close()
                 pool.join()
-                self.log2temp = dict(log2temp)
             else:
-                for item in ori_lines:
-                    self._sync_parsing(parser, item)
+                self.log2temp = {}
+                preprocessor = self.get_preprocessor()
+                for log_id, line in read_nonempty_lines(self.paths.in_file, encode):
+                    line = line.strip()
+                    processed_line = preprocessor(line)
+                    cluster = parser.match(processed_line)
+                    if not cluster:
+                        tqdm_write(
+                            "Warning: no match, try increasing max clusters:", line
+                        )
+                        continue
+                    self.log2temp[log_id] = cluster.cluster_id
 
             # Record block id and log event sequences.
             self._record_parsing_results(log_template_mapping_file)
 
-            self.logger.info("Finished parsing in %.2f" % (time.time() - start_time))
+            self.logger.info("Finished parsing in %.2f" % (time.time() - parse_time))
 
         # Transform original log sequences with log ids(line number) to log event sequence.
         for block, seq in self.block2seqs.items():
@@ -277,7 +309,7 @@ class BasicDataLoader:
         self.logger.info("Log event sequences saved.")
 
     def _load_log_event_seqs(self, reader):
-        for line in reader.readlines():
+        for line in reader:
             tokens = line.strip().split(":")
             block = tokens[0]
             seq = tokens[1].split()
@@ -323,7 +355,7 @@ class BasicDataLoader:
         self.logger.info("Done in %.2f" % (time.time() - start_time))
 
     def _load_templates(self, reader):
-        for line in reader.readlines():
+        for line in reader:
             tokens = line.strip().split(",")
             id = tokens[0]
             template = ",".join(tokens[1:])
@@ -336,7 +368,7 @@ class BasicDataLoader:
         self.logger.info("Templates saved.")
 
     def _load_log2temp(self, reader):
-        for line in reader.readlines():
+        for line in reader:
             logid, tempid = line.strip().split(",")
             self.log2temp[int(logid)] = int(tempid)
         self.logger.info(
@@ -349,7 +381,7 @@ class BasicDataLoader:
         self.logger.info("Log2Temp saved.")
 
     def _load_semantic_embed(self, reader):
-        for line in reader.readlines():
+        for line in reader:
             token = line.split()
             template_id = int(token[0])
             embed = np.asarray(token[1:], dtype=float)
@@ -365,8 +397,3 @@ class BasicDataLoader:
         for i in range(copies):
             res.append(X[i * quota : (i + 1) * quota])
         return res
-
-    def _sync_parsing(self, parser, line):
-        (id, message) = line
-        cluster = parser.match(message)
-        self.log2temp[id] = cluster.cluster_id

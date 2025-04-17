@@ -221,7 +221,7 @@ class ProbabilisticLabeling:
         block2conf = {}
         block2label = {}
         with open(self.res_file, "r", encoding="utf-8") as reader:
-            for line in reader.readlines():
+            for line in reader:
                 block_id, label, confidence = line.strip().split()
                 block2conf[block_id] = np.float(confidence)
                 block2label[block_id] = label
