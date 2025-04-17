@@ -389,6 +389,23 @@ class MockProgressBar:
         pass
 
 
+def tqdm_iter(iterable, unit, desc, print_interval=1_000_000):
+    t_prev = None
+    desc = " " + desc if desc else ""
+    for i, item in enumerate(iterable):
+        if i % print_interval == 0:
+            t = time.time()
+            ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            if t_prev is None:
+                t_prev = t
+            else:
+                t_diff = t - t_prev
+                units_per_sec = print_interval / t_diff
+                t_prev = t
+                print(f"{ts}{desc}: {i} {unit}s, {units_per_sec:.2f}{unit}/s")
+        yield item
+
+
 def tqdm(
     iterable=None, desc="", total=None, unit="it", ncols=None, leave=True, **kwargs
 ):
@@ -406,7 +423,7 @@ def tqdm(
             **kwargs,
         )
     if iterable is not None:
-        return iterable
+        return tqdm_iter(iterable, unit, desc)
     return MockProgressBar()
 
 
