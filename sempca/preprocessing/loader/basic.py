@@ -101,17 +101,22 @@ else:
     tqdm_write = print
 
 
-def worker_parse(parser_instance, pre_process_func, log_id_line_tuple):
+def worker_parse(
+    parser_instance: Drain3Parser,
+    pre_process_func: Callable[[str], str],
+    log_id_line_tuple: tuple,
+):
     log_id, line_content = log_id_line_tuple
     try:
         processed_line = pre_process_func(line_content)
-        cluster = parser_instance.match(processed_line)
+        cluster = parser_instance.match(processed_line, full_search_strategy="fallback")
         if cluster:
             return log_id, cluster.cluster_id
         else:
-            tqdm_write(
-                f"Warning: No match for log ID {log_id}, line: {line_content[:150]}..."
+            content = (
+                line_content if len(line_content) <= 200 else line_content[:200] + "..."
             )
+            tqdm_write(f"Warning: No match for log ID {log_id}, line: {content}")
     except Exception as e:
         tqdm_write(f"ERROR parsing line {log_id}, {line_content}: {e}")
     return None
@@ -128,8 +133,9 @@ def read_nonempty_lines(filepath, encoding):
 
 
 class BasicDataLoader:
+    logger = get_logger("BasicDataLoader")
+
     def __init__(self, paths: DataPaths, semantic_repr_func=None):
-        self.logger = get_logger(self.__class__.__name__)
         self.paths = paths
 
         self.blocks = []  # list of block / sequence IDs

@@ -1,5 +1,6 @@
 import os
 import re
+from abc import ABC
 from collections import OrderedDict
 from functools import partial
 from typing import Tuple, List, Dict, Callable
@@ -9,7 +10,7 @@ import pandas as pd
 
 from sempca.preprocessing.loader import BasicDataLoader, DataPaths
 from sempca.preprocessing.loader.templates import bgl_templates
-from sempca.utils import tqdm
+from sempca.utils import tqdm, get_logger
 
 time_lengths = [
     0,
@@ -59,7 +60,9 @@ def _pre_process(line, remove_cols):
     return " ".join(after_process)
 
 
-class BGLLoader(BasicDataLoader):
+class SuperComputerLoader(BasicDataLoader, ABC):
+    ds = "SuperComputer"
+
     def __init__(
         self,
         paths: DataPaths,
@@ -72,7 +75,7 @@ class BGLLoader(BasicDataLoader):
         encoding: str = "utf-8",
     ):
         """
-        Initialize BGLLoader.
+        Initialize SuperComputerLoader.
 
         Parameters
         ----------
@@ -82,7 +85,7 @@ class BGLLoader(BasicDataLoader):
         win_lines: max window size in lines
         semantic_repr_func: semantic representation function
         """
-        super(BGLLoader, self).__init__(paths, semantic_repr_func)
+        super().__init__(paths, semantic_repr_func)
         self._dataset_lines = None
         self.file_encoding = encoding
 
@@ -116,77 +119,9 @@ class BGLLoader(BasicDataLoader):
     def get_preprocessor(self) -> Callable[[str], str]:
         return partial(_pre_process, remove_cols=self.remove_cols)
 
-    def parse_by_official(self):
-        self.logger.info("Start parsing by Official.")
-        self._restore()
-        # Define official templates
-        templates = bgl_templates
-
-        os.makedirs(self.paths.official_dir, exist_ok=True)
-        templates_file = self.paths.templates_file
-        log2temp_file = self.paths.log2temp_file
-        if os.path.exists(templates_file) and os.path.exists(log2temp_file):
-            self.logger.info(
-                "Found parsing result, please note that this does not guarantee a smooth execution."
-            )
-            with open(templates_file, "r", encoding="utf-8") as reader:
-                for line in tqdm(reader):
-                    tokens = line.strip().split(",")
-                    id = int(tokens[0])
-                    template = ",".join(tokens[1:])
-                    self.templates[id] = template
-
-            with open(log2temp_file, "r", encoding="utf-8") as reader:
-                for line in reader:
-                    logid, tempid = line.strip().split(",")
-                    self.log2temp[int(logid)] = int(tempid)
-
-        else:
-            for id, template in enumerate(templates):
-                self.templates[id] = template
-            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
-                log_id = 0
-                for line in tqdm(reader):
-                    line = line.strip()
-                    if self.remove_cols:
-                        processed_line = self._pre_process(line)
-                    for index, template in self.templates.items():
-                        if re.compile(template).match(processed_line) is not None:
-                            self.log2temp[log_id] = index
-                            break
-                    if log_id not in self.log2temp.keys():
-                        # if processed_line == '':
-                        #     self.log2temp[log_id] = -1
-                        self.logger.warning(
-                            "Mismatched log message: %s" % processed_line
-                        )
-                        for index, template in self.templates.items():
-                            if re.compile(template).match(line) is not None:
-                                self.log2temp[log_id] = index
-                                break
-                        if log_id not in self.log2temp.keys():
-                            self.logger.error("Failed to parse line %s" % line)
-                            exit(2)
-                    log_id += 1
-
-            with open(templates_file, "w", encoding="utf-8") as writer:
-                for id, template in self.templates.items():
-                    writer.write(",".join([str(id), template]) + "\n")
-            with open(log2temp_file, "w", encoding="utf-8") as writer:
-                for logid, tempid in self.log2temp.items():
-                    writer.write(",".join([str(logid), str(tempid)]) + "\n")
-            # with open(logseq_file, 'w', encoding='utf-8') as writer:
-            #     self._save_log_event_seqs(writer)
-        self._prepare_semantic_embed(self.paths.semantic_vector_file)
-        # Summarize log event sequences.
-        for block, seq in self.block2seqs.items():
-            self.block2eventseq[block] = []
-            for log_id in seq:
-                self.block2eventseq[block].append(self.log2temp[log_id])
-
     def _load_raw_log_seqs(self):
         """
-        Load raw log sequences in BGL log data.
+        Load raw log sequences in log data.
         Returns
         -------
         None
@@ -212,7 +147,7 @@ class BGLLoader(BasicDataLoader):
                     self.block2label[block_id] = label
 
         else:
-            self.logger.info("Start loading BGL log sequences.")
+            self.logger.info("Start loading %s log sequences.", self.ds)
             with open(self.paths.in_file, "r", encoding=self.file_encoding) as reader:
                 nodes = self._component_grouping(reader)
 
@@ -520,3 +455,140 @@ class BGLLoader(BasicDataLoader):
 
         self._log_debug_stats(real_lengths)
         self._log_debug_histogram(hist2d, hist2d_anomalies)
+
+
+class BGLLoader(SuperComputerLoader):
+    logger = get_logger("BGLLoader")
+    ds = "BGL"
+
+    def __init__(
+        self,
+        paths: DataPaths,
+        semantic_repr_func=None,
+        group_component: bool = False,
+        win_secs: int = None,
+        win_lines: int = 20,
+        win_kind: str = "tumbling",
+        win_step: int = 1,
+    ):
+        """
+        Initialize BGLLoader.
+
+        paths: dataset and persistence paths configuration
+
+        See Also: SuperComputerLoader.__init__ for more parameters.
+        """
+        super(BGLLoader, self).__init__(
+            paths,
+            semantic_repr_func,
+            group_component,
+            win_secs,
+            win_lines,
+            win_kind,
+            win_step,
+            encoding="utf-8",
+        )
+
+    def parse_by_official(self):
+        self.logger.info("Start parsing by Official.")
+        self._restore()
+        # Define official templates
+        templates = bgl_templates
+
+        os.makedirs(self.paths.official_dir, exist_ok=True)
+        templates_file = self.paths.templates_file
+        log2temp_file = self.paths.log2temp_file
+        if os.path.exists(templates_file) and os.path.exists(log2temp_file):
+            self.logger.info(
+                "Found parsing result, please note that this does not guarantee a smooth execution."
+            )
+            with open(templates_file, "r", encoding="utf-8") as reader:
+                for line in tqdm(reader):
+                    tokens = line.strip().split(",")
+                    id = int(tokens[0])
+                    template = ",".join(tokens[1:])
+                    self.templates[id] = template
+
+            with open(log2temp_file, "r", encoding="utf-8") as reader:
+                for line in reader:
+                    logid, tempid = line.strip().split(",")
+                    self.log2temp[int(logid)] = int(tempid)
+
+        else:
+            for id, template in enumerate(templates):
+                self.templates[id] = template
+            with open(self.paths.in_file, "r", encoding="utf-8") as reader:
+                log_id = 0
+                for line in tqdm(reader):
+                    line = line.strip()
+                    if self.remove_cols:
+                        processed_line = self._pre_process(line)
+                    for index, template in self.templates.items():
+                        if re.compile(template).match(processed_line) is not None:
+                            self.log2temp[log_id] = index
+                            break
+                    if log_id not in self.log2temp.keys():
+                        # if processed_line == '':
+                        #     self.log2temp[log_id] = -1
+                        self.logger.warning(
+                            "Mismatched log message: %s" % processed_line
+                        )
+                        for index, template in self.templates.items():
+                            if re.compile(template).match(line) is not None:
+                                self.log2temp[log_id] = index
+                                break
+                        if log_id not in self.log2temp.keys():
+                            self.logger.error("Failed to parse line %s" % line)
+                            exit(2)
+                    log_id += 1
+
+            with open(templates_file, "w", encoding="utf-8") as writer:
+                for id, template in self.templates.items():
+                    writer.write(",".join([str(id), template]) + "\n")
+            with open(log2temp_file, "w", encoding="utf-8") as writer:
+                for logid, tempid in self.log2temp.items():
+                    writer.write(",".join([str(logid), str(tempid)]) + "\n")
+            # with open(logseq_file, 'w', encoding='utf-8') as writer:
+            #     self._save_log_event_seqs(writer)
+        self._prepare_semantic_embed(self.paths.semantic_vector_file)
+        # Summarize log event sequences.
+        for block, seq in self.block2seqs.items():
+            self.block2eventseq[block] = []
+            for log_id in seq:
+                self.block2eventseq[block].append(self.log2temp[log_id])
+
+
+class TBirdLoader(SuperComputerLoader):
+    logger = get_logger("TBirdLoader")
+    ds = "TBird"
+
+    def __init__(
+        self,
+        paths: DataPaths,
+        semantic_repr_func=None,
+        group_component: bool = False,
+        win_secs: int = None,
+        win_lines: int = 20,
+        win_kind: str = "tumbling",
+        win_step: int = 1,
+    ):
+        """
+        Initialize TBirdLoader.
+
+        paths: dataset and persistence paths configuration
+
+        See Also: SuperComputerLoader.__init__ for more parameters.
+        """
+        super(TBirdLoader, self).__init__(
+            paths,
+            semantic_repr_func,
+            group_component,
+            win_secs,
+            win_lines,
+            win_kind,
+            win_step,
+            encoding="latin-1",
+        )
+
+    def parse_by_official(self):
+        raise NotImplementedError()

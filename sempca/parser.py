@@ -84,8 +84,16 @@ class Drain3Parser:
             self.parser.save_state("Saving as required")
         return self.parser.drain.clusters
 
-    def match(self, inline):
-        return self.parser.match(inline)
+    def match(self, inline, full_search_strategy="never"):
+        """
+        Match a log line to the templates.
+        Args:
+            inline: line to be matched
+            full_search_strategy: "never", "fallback" or "always"
+
+        See TemplateMiner.match for more details.
+        """
+        return self.parser.match(inline, full_search_strategy)
 
     def load(self, type, input):
         if type == "File":
