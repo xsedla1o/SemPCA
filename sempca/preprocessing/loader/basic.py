@@ -118,7 +118,7 @@ def worker_parse(parser_instance, pre_process_func, log_id_line_tuple):
 
 
 def read_nonempty_lines(filepath, encoding):
-    with open(filepath, "r", encoding=encoding, errors="ignore") as reader:
+    with open(filepath, "r", encoding=encoding) as reader:
         tqdm_reader = tqdm(reader, desc="Reading and Preprocessing")
         for log_id, line in enumerate(tqdm_reader):
             line = line.strip()
@@ -146,6 +146,7 @@ class BasicDataLoader:
         self.id2embed = {}  # dict of template ID to semantic embedding
 
         self.semantic_repr_func = semantic_repr_func  # callable to get embeddings
+        self.file_encoding = "utf-8"  # encoding of the log file
 
         # Only used by Spirit subclass, ignore for now.
         self.file_for_parsing = None  # path to a pre-processed file for parsing
@@ -180,11 +181,13 @@ class BasicDataLoader:
         :return: Update templates, log2temp attributes in self.
         """
 
-    def parse_by_drain(self, core_jobs=5, encode="utf-8"):
+    def parse_by_drain(self, core_jobs=5, encode=None):
         """
         Load parsing results by Drain
         :return: Update templates, log2temp attributes in self.
         """
+        if encode is None:
+            encode = self.file_encoding
         self.logger.info("Start parsing by Drain.")
         self._restore()
         if not os.path.exists(self.paths.drain_config):

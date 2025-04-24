@@ -69,6 +69,7 @@ class BGLLoader(BasicDataLoader):
         win_lines: int = 20,
         win_kind: str = "tumbling",
         win_step: int = 1,
+        encoding: str = "utf-8",
     ):
         """
         Initialize BGLLoader.
@@ -83,6 +84,7 @@ class BGLLoader(BasicDataLoader):
         """
         super(BGLLoader, self).__init__(paths, semantic_repr_func)
         self._dataset_lines = None
+        self.file_encoding = encoding
 
         assert isinstance(win_secs, int) or isinstance(win_lines, int), (
             "At least one of win_secs and win_lines should be an integer."
@@ -211,9 +213,7 @@ class BGLLoader(BasicDataLoader):
 
         else:
             self.logger.info("Start loading BGL log sequences.")
-            with open(
-                self.paths.in_file, "r", encoding="utf-8", errors="ignore"
-            ) as reader:
+            with open(self.paths.in_file, "r", encoding=self.file_encoding) as reader:
                 nodes = self._component_grouping(reader)
 
                 if self.win_kind == "tumbling":
