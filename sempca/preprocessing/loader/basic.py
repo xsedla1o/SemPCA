@@ -27,6 +27,7 @@ class DataPaths:
     in_file: Union[Path, str] = None
     project_root: Union[Path, str] = None
     label_file: Union[Path, str] = None
+    sequence_file: Union[Path, str] = None
     drain_config: Union[Path, str] = None
     persistence_dir: Union[Path, str] = None
     datasets_dir: Union[Path, str] = None
@@ -39,7 +40,6 @@ class DataPaths:
     templates_file: Path = field(init=False)
     log2temp_file: Path = field(init=False)
     logseq_file: Path = field(init=False)
-    sequence_file: Path = field(init=False)
     semantic_vector_file: Path = field(init=False)
 
     @staticmethod
@@ -73,7 +73,9 @@ class DataPaths:
         if self.label_file is None:
             self.label_file = self.dataset_dir / "label.txt"
 
-        self.sequence_file = self.dataset_dir / "raw_log_seqs.txt"
+        self.sequence_file = self.to_path(self.sequence_file)
+        if self.sequence_file is None:
+            self.sequence_file = self.dataset_dir / "raw_log_seqs.txt"
 
         self.processed_out_dir = self.to_path(self.processed_out_dir)
         if self.processed_out_dir is None:
