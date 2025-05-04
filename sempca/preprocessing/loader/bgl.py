@@ -37,8 +37,9 @@ line_lengths = [
     2,
     5,
     10,
-    50,
-    100,
+    40,
+    80,
+    120,
     200,
     500,
     1000,
@@ -330,6 +331,11 @@ class SuperComputerLoader(BasicDataLoader, ABC):
 
     def _log_debug_histogram(self, hist2d, hist2d_anomalies):
         """Make 2D histogram"""
+        all_hist_path = self.paths.dataset_dir / "hist2d.csv"
+        hist2d.to_csv(all_hist_path, index=True, header=True)
+        anomaly_path = self.paths.dataset_dir / "hist2d_anomalies.csv"
+        hist2d_anomalies.to_csv(anomaly_path, index=True, header=True)
+
         self.logger.debug("2D histogram:")
         self.logger.debug(hist2d)
         self.logger.debug(
