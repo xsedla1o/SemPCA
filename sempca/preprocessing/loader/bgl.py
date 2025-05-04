@@ -298,6 +298,8 @@ class SuperComputerLoader(BasicDataLoader, ABC):
                 # Find the right bin for the histogram
                 (x, y) = find_bin(ts_last - ts_first, len(self.block2seqs[b_id]))
                 hist2d.loc[x, y] += 1
+                if label == "Anomalous":
+                    hist2d_anomalies.loc[x, y] += 1
         pbar.close()
 
         self._log_debug_stats(real_lengths)
