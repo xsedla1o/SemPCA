@@ -1,7 +1,7 @@
 import os
 import re
 from abc import ABC
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from functools import partial
 from typing import Tuple, List, Dict, Callable
 
@@ -246,6 +246,7 @@ class SuperComputerLoader(BasicDataLoader, ABC):
         find_bin = partial(self.find_2d_hist_bin, hist=hist2d)
 
         hist2d_anomalies = hist2d.copy()
+        anomaly_per_session = defaultdict(int)
 
         real_lengths = []
         ts_first = 0
@@ -253,6 +254,8 @@ class SuperComputerLoader(BasicDataLoader, ABC):
         for node, seq in nodes.items():
             b_id = None
             window_end = None
+            anomalies = 0
+
             label = "Normal"
             for i, line in seq:
                 line_label, ts, _ = line.split(" ", maxsplit=2)
@@ -271,10 +274,12 @@ class SuperComputerLoader(BasicDataLoader, ABC):
                     hist2d.loc[x, y] += 1
                     if label == "Anomalous":
                         hist2d_anomalies.loc[x, y] += 1
+                        anomaly_per_session[anomalies] += 1
 
                     # Reset the block
                     b_id = None
                     window_end = None
+                    anomalies = 0
 
                 if b_id is None:
                     # Start a new block
@@ -287,6 +292,7 @@ class SuperComputerLoader(BasicDataLoader, ABC):
 
                 if not line_label.startswith("-"):
                     label = "Anomalous"
+                    anomalies += 1
                 self.block2seqs[b_id].append(i)
                 ts_last = ts_i
 
@@ -301,10 +307,12 @@ class SuperComputerLoader(BasicDataLoader, ABC):
                 hist2d.loc[x, y] += 1
                 if label == "Anomalous":
                     hist2d_anomalies.loc[x, y] += 1
+                    anomaly_per_session[anomalies] += 1
         pbar.close()
 
         self._log_debug_stats(real_lengths)
         self._log_debug_histogram(hist2d, hist2d_anomalies)
+        self._log_debug_anomalies(anomaly_per_session)
 
     def _log_debug_stats(self, real_lengths):
         self.logger.debug(
@@ -349,6 +357,12 @@ class SuperComputerLoader(BasicDataLoader, ABC):
 
         self.logger.debug("2D histogram (normal):")
         self.logger.debug(hist2d - hist2d_anomalies)
+
+    def _log_debug_anomalies(self, anomaly_per_session: Dict[int, int]):
+        aps = pd.Series(anomaly_per_session).sort_index()
+        aps = aps.reindex(range(1, aps.index.max() + 1), fill_value=0)
+        aps.to_csv(self.paths.dataset_dir / "anomaly_per_session.csv", index=True)
+        self.logger.debug("Anomalies per session: %s", aps)
 
     def _group_by_sliding_window(self, nodes: Dict[str, List[Tuple[int, str]]]):
         win_secs = self.win_secs
